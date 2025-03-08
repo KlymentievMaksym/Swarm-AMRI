@@ -92,49 +92,82 @@ class PSO:
             self.history_best_dep_val.append(self.best_dep_val.copy())
             self.history_best.append(self.best)
 
+        # print(self.projection[self.projection != float("inf")][np.argsort(self.projection[self.projection != float("inf")])][:1])
+        # print(space[0][self.projection != float("inf")][np.argsort(self.projection[self.projection != float("inf")])][:1])
+        # print(space[1][self.projection != float("inf")][np.argsort(self.projection[self.projection != float("inf")])][:1])
+
         d3 = kwargs.get("d3", False)
         d2 = kwargs.get("d2", False)
-        if d2:
-            fig, ax1 = plt.subplots()
-        elif d3:
-            fig = plt.figure(figsize=plt.figaspect(2.))
-            ax1 = fig.add_subplot(1, 1, 1, projection='3d')
-        cs = ax1.contourf(*space, self.projection, cmap="cool")
-        fig.colorbar(cs)
-
-        fig.canvas.manager.window.state('zoomed')
-        # print(self.history_best)
-        def update(frame):
-            ax1.clear()
-            ax1.set_title(f"Best solution: {self.history_best[frame]:.5f} | Iter {frame}")
+        save_path = kwargs.get("save", None)
+        if d2 or d3:
             if d2:
-                ax1.contourf(*space, self.projection, cmap="cool")
-                ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], label="Population", c='white')
-                ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], label="Best", c='yellow')
+                fig, ax1 = plt.subplots()
             elif d3:
-                ax1.plot_surface(*space, self.projection, cmap="cool", alpha=0.8)
-                ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], self.history_fitness_func[frame], label="Population", c='Black')
-                ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], self.history_best[frame], label="Best", c='Red')
-            ax1.legend()
+                fig = plt.figure(figsize=plt.figaspect(2.))
+                ax1 = fig.add_subplot(1, 1, 1, projection='3d')
+            cs = ax1.contourf(*space, self.projection, cmap="cool")
 
-        ani = animation.FuncAnimation(fig=fig, func=update, frames=self.iterations, interval=10)
-        # ani.save("1.gif")
-        plt.show()
-        
-        
-        # print(self.fitnes_func)
+            # print(self.projection[np.argsort(self.projection)][self.projection[np.argsort(self.projection)] != float("inf")])
+            # print(space[np.argsort(self.projection)][:10], self.projection[np.argsort(self.projection)][:10])
+            fig.colorbar(cs)
+
+            fig.canvas.manager.window.state('zoomed')
+            # print(self.history_best)
+            def update(frame):
+                ax1.clear()
+                ax1.set_title(f"Best solution: {self.history_best[frame]:.5f} | Iter {frame}")
+                if d2:
+                    ax1.contourf(*space, self.projection, cmap="cool")
+                    print(self.history_best_dep_val[frame], self.history_best[frame])
+                    ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], label="Population", c='black')
+                    ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], label="Best", c='yellow')
+                elif d3:
+                    ax1.plot_surface(*space, self.projection, cmap="cool", alpha=0.8)
+                    ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], self.history_fitness_func[frame], label="Population", c='Black')
+                    ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], self.history_best[frame], label="Best", c='Red')
+                ax1.legend()
+
+            ani = animation.FuncAnimation(fig=fig, func=update, frames=self.iterations, interval=10)
+            if save_path is not None:
+                ani.save(save_path, fps=30)
+            plt.show()
+            
+            
+            # print(self.fitnes_func)
 
 
         
 
 
 if __name__ == "__main__":
-    def F(X):
-        A = 10
-        length = len(X)
-        result = A*length
-        for x in X:
-            result += x**2-A*np.cos(2*np.pi*x)
-        return result
+    # def F(X):
+    #     A = 10
+    #     length = len(X)
+    #     result = A*length
+    #     for x in X:
+    #         result += x**2-A*np.cos(2*np.pi*x)
+    #     return result
+    # pso = PSO(50, 100, [-1, 1], F, [[-5.12, 5.12], [-5.12, 5.12]], d3=True)
 
-    pso = PSO(50, 100, [-1, 1], F, [[-5.12, 5.12], [-5.12, 5.12]], d3=True)
+    # def F(X):
+    #     # BonkBonk = 1e5
+    #     x, y, = X
+    #     f1 = (x-1)**3 < 0
+    #     f2 = x + y - 2 < 0
+    #     if f1 and f2:
+    #         return (1 - x)**2 + 100*(y - x**2)**2
+    #     else:
+    #         return float('inf')
+    
+    # pso = PSO(50, 100, [-1, 1], F, [[-1.5, 1.5], [-0.5, 2.5]], d2=True)
+
+    def F(X):
+        # BonkBonk = 1e5
+        x, y, = X
+        f1 = x+y**2 < 2
+        if f1:
+            return (1 - x)**2 + 100*(y - x**2)**2
+        else:
+            return float('inf')
+    
+    pso = PSO(10, 300, [-.01, .01], F, [[-1.5, 1.5], [-1.5, 1.5]], d2=True, save="Lab2/PSO.gif")
