@@ -96,22 +96,21 @@ class PSO:
         # print(space[0][self.projection != float("inf")][np.argsort(self.projection[self.projection != float("inf")])][:1])
         # print(space[1][self.projection != float("inf")][np.argsort(self.projection[self.projection != float("inf")])][:1])
 
-        d3 = kwargs.get("d3", False)
         d2 = kwargs.get("d2", False)
-        save_path = kwargs.get("save", None)
-        if d2 or d3:
-            if d2:
-                fig, ax1 = plt.subplots()
-            elif d3:
-                fig = plt.figure(figsize=plt.figaspect(2.))
-                ax1 = fig.add_subplot(1, 1, 1, projection='3d')
-            cs = ax1.contourf(*space, self.projection, cmap="cool")
+        d3 = kwargs.get("d3", False)
 
-            # print(self.projection[np.argsort(self.projection)][self.projection[np.argsort(self.projection)] != float("inf")])
-            # print(space[np.argsort(self.projection)][:10], self.projection[np.argsort(self.projection)][:10])
+        save_path = kwargs.get("save", None)
+
+        show = kwargs.get("show", False)
+        if d2:
+            fig, ax1 = plt.subplots()
+        elif d3:
+            fig = plt.figure(figsize=plt.figaspect(2.))
+            ax1 = fig.add_subplot(1, 1, 1, projection='3d')
+        if (d2 or d3) and (show or save_path is not None):
+            cs = ax1.contourf(*space, self.projection, cmap="cool")
             fig.colorbar(cs)
 
-            fig.canvas.manager.window.state('zoomed')
             # print(self.history_best)
             def update(frame):
                 ax1.clear()
@@ -129,14 +128,11 @@ class PSO:
 
             ani = animation.FuncAnimation(fig=fig, func=update, frames=self.iterations, interval=10)
             if save_path is not None:
-                ani.save(save_path, fps=30)
-            plt.show()
-            
-            
-            # print(self.fitnes_func)
-
-
-        
+                # print("Saving")
+                ani.save(save_path, fps=1200)
+            if show:
+                fig.canvas.manager.window.state('zoomed')
+                plt.show()
 
 
 if __name__ == "__main__":
@@ -170,4 +166,4 @@ if __name__ == "__main__":
         else:
             return float('inf')
     
-    pso = PSO(10, 300, [-.01, .01], F, [[-1.5, 1.5], [-1.5, 1.5]], d2=True, save="Lab2/PSO.gif")
+    pso = PSO(40, 70, [-.1, .1], F, [[-1.5, 1.5], [-1.5, 1.5]], d2=True) # , save="Lab2/PSO.gif"
