@@ -4,25 +4,25 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-class FF:
-    def __init__(self, pop_size, iterations, limits_speed, function, limits, **kwargs):
+class Algorithm:
+    def __init__(self, pop_size, iterations, function, limits, **kwargs):
         self.iterations = iterations
         self.pop_size = pop_size
         self.function = function
-        self.limits = limits
+        self.limits = np.array(limits)
 
         self.dim = len(self.limits)
 
         self.integer = kwargs.get("integer", [])
+
+        self.kwargs = kwargs
 
         self.x_low = [limit[0] for limit in self.limits]
         self.x_high = [limit[1] for limit in self.limits]
         self.parts = np.random.uniform(self.x_low, self.x_high, (self.pop_size, self.dim))
         for i in self.integer:
             self.parts[:, i] = np.round(self.parts[:, i])
-
-        self.best_personal = [float("inf") for part in range(self.pop_size)]
-        self.best_personal_dep_val = [[0 for i in range(self.dim)] for j in range(self.pop_size)]
+        self.fitness_func = np.array([self.function(part) for part in self.parts])
 
         self.best = float("inf")
         self.best_dep_val = [0 for i in range(self.dim)]
@@ -33,10 +33,6 @@ class FF:
         self.history_best_dep_val = []
         self.history_best = []
 
-    def run(self, **kwargs):
-        self.plot(**kwargs)
-        return self.best, self.best_dep_val
-
     def plot(self, **kwargs):
         dots = kwargs.get("dots", 500)
 
@@ -46,6 +42,11 @@ class FF:
         save_path = kwargs.get("save", None)
 
         show = kwargs.get("show", False)
+
+        if show:
+            plt.plot(list(range(self.iterations)), self.history_best)
+            plt.grid()
+            plt.show()
 
         if self.dim <= 2 and (show or save_path is not None):
             self.projection_dep_val = np.linspace(self.x_low, self.x_high, dots)
@@ -62,7 +63,6 @@ class FF:
                 cs = ax1.contourf(*space, self.projection, cmap="cool")
                 fig.colorbar(cs)
 
-                # print(self.history_best)
                 def update(frame):
                     ax1.clear()
                     ax1.set_title(f"Best solution: {self.history_best[frame]:.5f} | Best dep val: {self.history_best_dep_val[frame]} | Iter {frame}")
@@ -77,9 +77,8 @@ class FF:
                         ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], self.history_best[frame], label="Best", c='Red')
                     ax1.legend()
 
-                ani = animation.FuncAnimation(fig=fig, func=update, frames=self.iterations, interval=30)
+                ani = animation.FuncAnimation(fig=fig, func=update, frames=self.iterations, interval=10)
                 if save_path is not None:
-                    # print("Saving")
                     ani.save(save_path, fps=10)
                 if show:
                     fig.canvas.manager.window.state('zoomed')
