@@ -23,13 +23,16 @@ class Algorithm:
         # self.x_high = [limit[1] for limit in self.limits]
         self.x_low = self.limits[:, 0]
         self.x_high = self.limits[:, 1]
+
         self.parts = np.random.uniform(self.x_low, self.x_high, (self.pop_size, self.dim))
         for i in self.integer:
             self.parts[:, i] = np.round(self.parts[:, i])
         self.fitness_func = np.array([self.function(part) for part in self.parts])
 
-        self.best = float("inf")
-        self.best_dep_val = [0 for i in range(self.dim)]
+        self.best = np.min(self.fitness_func)
+        self.best_dep_val = self.parts[np.argmin(self.fitness_func)]
+        # self.best = float("inf")
+        # self.best_dep_val = [0 for i in range(self.dim)]
 
         self.history_parts = []
         self.history_fitness_func = []
@@ -68,10 +71,12 @@ class Algorithm:
     def plot(self, **kwargs):
         dots = kwargs.get("dots", 500)
 
+        d1 = kwargs.get("d1", False)
         d2 = kwargs.get("d2", False)
         d3 = kwargs.get("d3", False)
 
         save_path = kwargs.get("save", None)
+        save_path_photo = kwargs.get("savep", None)
 
         show = kwargs.get("show", False)
         plot = kwargs.get("plot", True)
@@ -80,16 +85,25 @@ class Algorithm:
             plt.plot(list(range(self.iterations))[:len(self.history_best)], self.history_best, label=self.__class__.__name__)
             plt.grid()
             plt.legend()
+            if save_path_photo is not None:
+                plt.savefig(save_path_photo)
             if plot:
                 plt.show()
+            else:
+                plt.close()
 
         if self.dim <= 2 and (show or save_path is not None):
-            if d2:
+
+            if d1 or d2:
                 fig, ax1 = plt.subplots()
             elif d3:
                 fig = plt.figure(figsize=plt.figaspect(2.))
                 ax1 = fig.add_subplot(1, 1, 1, projection='3d')
-            if (d2 or d3):
+            if d1:
+                self.projection_dep_val = np.linspace(self.x_low, self.x_high, dots)
+                self.projection = np.array([self.function(dot) for dot in self.projection_dep_val])
+                ax1.plot(self.projection_dep_val, self.projection)
+            elif (d2 or d3):
                 self.projection_dep_val = np.linspace(self.x_low, self.x_high, dots)
                 space = np.array([self.projection_dep_val[:, i] for i in range(self.dim)])
                 space = np.meshgrid(*space)
@@ -98,10 +112,15 @@ class Algorithm:
                 cs = ax1.contourf(*space, self.projection, cmap="cool")
                 fig.colorbar(cs)
 
+            if (d1 or d2 or d3):
                 def update(frame):
                     ax1.clear()
                     ax1.set_title(f"Best solution: {self.history_best[frame]:.5f} | Best dep val: {self.history_best_dep_val[frame]} | Iter {frame}")
-                    if d2:
+                    if d1:
+                        ax1.plot(self.projection_dep_val, self.projection)
+                        ax1.scatter(self.history_parts[frame], self.history_fitness_func[frame], label="Population", c='Black')
+                        ax1.scatter(self.history_best_dep_val[frame], self.history_best[frame], label="Best", c='Red')
+                    elif d2:
                         ax1.contourf(*space, self.projection, cmap="cool")
                         # print(self.history_best_dep_val[frame], self.history_best[frame])
                         ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], label="Population", c='black')

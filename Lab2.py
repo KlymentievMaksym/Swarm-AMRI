@@ -149,17 +149,17 @@ Trail_limits = [[0.005, 2.0], [0.25, 1.3], [2.0, 15.0]]
 # for n in ns:
 #     pso = []
 #     for i in range(10):
-#         pso.append(PSO(50, 50, [0, 4], [-.1, .1], Rastrigin, [[-1.5, 1.5]*n], history=True, break_faster=False).run()[0])
+#         pso.append(PSO(50, 50, [0, 4], [-.1, .1], Rastrigin, [[-1.5, 1.5] for _ in range(n)], history=True, break_faster=False).run()[0])
 #     mean_pso = np.mean(pso, axis=0)
 #     plt.plot(range(len(mean_pso)), mean_pso, label="PSO")
 #     bee = []
 #     for i in range(10):
-#         bee.append(BEE(50, 50, 25, 13, 7, 4, [0, 1], Rastrigin, [[-1.5, 1.5]*n], history=True, break_faster=False).run()[0])
+#         bee.append(BEE(50, 50, 25, 13, 7, 4, [0, 1], Rastrigin, [[-1.5, 1.5] for _ in range(n)], history=True, break_faster=False).run()[0])
 #     mean_bee = np.mean(bee, axis=0)
 #     plt.plot(range(len(mean_bee)), mean_bee, label="BEE")
 #     ff = []
 #     for i in range(10):
-#         ff.append(FF(50, 50, [0, 1], Rastrigin, [[-1.5, 1.5]*n], history=True, break_faster=False).run()[0])
+#         ff.append(FF(50, 50, [0, 1], Rastrigin, [[-1.5, 1.5] for _ in range(n)], history=True, break_faster=False).run()[0])
 #     mean_ff = np.mean(ff, axis=0)
 #     plt.plot(range(len(mean_ff)), mean_ff, label="FF")
 
@@ -167,7 +167,7 @@ Trail_limits = [[0.005, 2.0], [0.25, 1.3], [2.0, 15.0]]
 #     plt.grid()
 #     plt.savefig(f"Lab2/Images/Rastring_{n}.png")
 #     # plt.show()
-#     plt.close()
+    # plt.close()
 
 # --------------------------------------- #
 # 3. (3 бали) Модифікувати програми так (для трьох алгоритмів), щоб можна було бачити процес пошуку глобального екстремуму функцій з обмеженнями, які наведені далі у 4-му розділі даної роботи.
@@ -209,9 +209,9 @@ Trail_limits = [[0.005, 2.0], [0.25, 1.3], [2.0, 15.0]]
 # funcs = [(Reductor, Reductor_limits)]
 # for func, limit in funcs:
 
-#     # PSO(100, 100, [0, 4], [-1.1, 1.1], func, limit, show=True, plot=False).run()
-#     # BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, show=True, plot=False).run()
-#     # FF(100, 100, [0, 1], func, limit, show=True, plot=False).run()
+#     # PSO(100, 100, [0, 4], [-1.1, 1.1], func, limit, show=True, plot=False, integer=[2]).run()
+#     # BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, show=True, plot=False, integer=[2]).run()
+#     # FF(100, 100, [0, 1], func, limit, show=True, plot=False, integer=[2]).run()
 #     # plt.legend()
 #     # plt.grid()
 #     # plt.savefig(f"Lab2/Images/{func.__name__}_one_time.png")
@@ -220,17 +220,17 @@ Trail_limits = [[0.005, 2.0], [0.25, 1.3], [2.0, 15.0]]
 
 #     pso = []
 #     for i in range(10):
-#         pso.append(PSO(100, 100, [0, 4], [-1.1, 1.1], func, limit, history=True, break_faster=False).run()[0])
+#         pso.append(PSO(100, 100, [0, 4], [-1.1, 1.1], func, limit, history=True, break_faster=False, integer=[2]).run()[0])
 #     mean_pso = np.mean(pso, axis=0)
 #     plt.plot(range(len(mean_pso)), mean_pso, label="PSO")
 #     bee = []
 #     for i in range(10):
-#         bee.append(BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, history=True, break_faster=False).run()[0])
+#         bee.append(BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, history=True, break_faster=False, integer=[2]).run()[0])
 #     mean_bee = np.mean(bee, axis=0)
 #     plt.plot(range(len(mean_bee)), mean_bee, label="BEE")
 #     ff = []
 #     for i in range(10):
-#         ff.append(FF(100, 100, [0, 1], func, limit, history=True, break_faster=False).run()[0])
+#         ff.append(FF(100, 100, [0, 1], func, limit, history=True, break_faster=False, integer=[2]).run()[0])
 #     mean_ff = np.mean(ff, axis=0)
 #     plt.plot(range(len(mean_ff)), mean_ff, label="FF")
 
@@ -248,17 +248,17 @@ Trail_limits = [[0.005, 2.0], [0.25, 1.3], [2.0, 15.0]]
 # for func, limit in funcs:
 #     pso = []
 #     for i in range(10):
-#         pso.append(PSO(100, 100, [0, 4], [-.1, .1], func, limit, history=True, break_faster=False).run()[0])
+#         pso.append(PSO(100, 100, [0, 4], [-.1, .1], func, limit, history=True, break_faster=False, integer=[2]).run()[0])
 #     mean_pso = np.mean(pso, axis=0)
 #     plt.plot(range(len(mean_pso)), mean_pso, label="PSO")
 #     bee = []
 #     for i in range(10):
-#         bee.append(BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, history=True, break_faster=False).run()[0])
+#         bee.append(BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, history=True, break_faster=False, integer=[2]).run()[0])
 #     mean_bee = np.mean(bee, axis=0)
 #     plt.plot(range(len(mean_bee)), mean_bee, label="BEE")
 #     ff = []
 #     for i in range(10):
-#         ff.append(FF(100, 100, [0, 1], func, limit, history=True, break_faster=False).run()[0])
+#         ff.append(FF(100, 100, [0, 1], func, limit, history=True, break_faster=False, integer=[2]).run()[0])
 #     mean_ff = np.mean(ff, axis=0)
 #     plt.plot(range(len(mean_ff)), mean_ff, label="FF")
 

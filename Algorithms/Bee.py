@@ -59,6 +59,8 @@ class BEE(Algorithm):
                 for z in range(Z):
                     x[z] = self.parts[z] + theta * self.beta * (np.array(self.limits)[:, 1] - np.array(self.limits)[:, 0]) * (-1+2*np.random.rand(self.dim))
                     x[z] = np.clip(x[z], self.limits[:, 0], self.limits[:, 1])
+                    for j in self.integer:
+                        x[z, j] = np.round(x[z, j])
                     # x[z] = np.maximum(self.limits[:, 0], np.minimum(self.limits[:, 1], x[z]))
 
                 fitness_func = np.array([self.function(part) for part in x])
