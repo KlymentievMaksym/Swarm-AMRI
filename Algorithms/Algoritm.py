@@ -60,7 +60,7 @@ class Algorithm:
         name = kwargs.get("name", "No Name")
         percent = (quantity / total) * 100
         print(f"Progress {name} : {quantity}/{total} ({percent:.2f}%)", end='\r')
-        if quantity == total-1:
+        if quantity == total-1 or (self.same and self.kwargs.get("break_faster", False)):
             percent = ((quantity+1) / total) * 100
             print(f"Progress {name} : {quantity+1}/{total} ({percent:.2f}%)")
             # print()
@@ -103,7 +103,7 @@ class Algorithm:
                     ax1.set_title(f"Best solution: {self.history_best[frame]:.5f} | Best dep val: {self.history_best_dep_val[frame]} | Iter {frame}")
                     if d2:
                         ax1.contourf(*space, self.projection, cmap="cool")
-                        print(self.history_best_dep_val[frame], self.history_best[frame])
+                        # print(self.history_best_dep_val[frame], self.history_best[frame])
                         ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], label="Population", c='black')
                         ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], label="Best", c='yellow')
                     elif d3:

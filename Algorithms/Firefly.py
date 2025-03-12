@@ -31,11 +31,12 @@ class FF(Algorithm):
         self.kwargs.update(kwargs)
         show = self.kwargs.get("show", False)
         save_location = self.kwargs.get("save", None)
+        history = self.kwargs.get("history", False)
+        break_faster = self.kwargs.get("break_faster", False)
         # self.beta_max = np.random.uniform(self.low, self.high)
         # self.gamma = np.random.uniform(self.low, self.high)
         # self.alpha = np.random.uniform(self.low, self.high)
         for iteration in range(self.iterations):
-            self.progress_bar(iteration, self.iterations, name="Firefly")
             self.parts = self.parts[np.argsort(self.fitness_func)]
             self.fitness_func = np.sort(self.fitness_func)
             # if iteration % 2 == 0:
@@ -66,24 +67,27 @@ class FF(Algorithm):
             if self.best != float("inf") and len(self.history_best) != 0:
                 self.check_if_same(self.best, self.history_best[-1])
 
-            if show or save_location is not None:
+            if show or save_location is not None or history:
                 self.history_parts.append(self.parts.copy())
                 self.history_fitness_func.append(self.fitness_func.copy())
 
                 self.history_best.append(self.best)
                 self.history_best_dep_val.append(self.best_dep_val.copy())
             if iteration != 0 and iteration % 10 == 0:
-                # if (np.array(self.history_best[iteration-10:iteration]) == float("inf")).all():
-                if np.unique(np.array(self.history_best[iteration-10:iteration])).size == 1:
+                if (np.array(self.history_best[iteration-10:iteration]) == float("inf")).all():
+                # if np.unique(np.array(self.history_best[iteration-10:iteration])).size == 1:
                     self.parts = np.random.uniform(self.x_low, self.x_high, (self.pop_size, self.dim))
                     for i in self.integer:
                         self.parts[:, i] = np.round(self.parts[:, i])
                     self.fitness_func = np.array([self.function(part) for part in self.parts])
 
-            if self.same:
+            self.progress_bar(iteration, self.iterations, name="Firefly")
+            if self.same and break_faster:
                 break
         if show or save_location is not None:
             self.plot(**self.kwargs)
+        if history:
+            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
         return self.best, self.best_dep_val
 
 

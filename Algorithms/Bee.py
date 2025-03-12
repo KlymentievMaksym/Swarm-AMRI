@@ -23,8 +23,9 @@ class BEE(Algorithm):
         self.kwargs.update(kwargs)
         show = self.kwargs.get("show", False)
         save_location = self.kwargs.get("save", None)
+        history = self.kwargs.get("history", False)
+        break_faster = self.kwargs.get("break_faster", False)
         for iteration in range(self.iterations):
-            self.progress_bar(iteration, self.iterations, name="BEE")
             prev_best = self.best
             self.best = min(self.best, self.fitness_func[np.argmin(self.fitness_func)])
             if prev_best != self.best:
@@ -66,33 +67,35 @@ class BEE(Algorithm):
                 if fitness_func[z] < self.function(self.parts[l]):
                     self.parts[l] = x[z]
                     self.fitness_func[l] = fitness_func[z]
-            if show or save_location is not None:
+            if show or save_location is not None or history:
                 self.history_parts.append(self.parts.copy())
                 self.history_fitness_func.append(self.fitness_func.copy())
                 # Bee search phase
                 self.parts[self.areas_num:] = np.random.uniform(self.x_low, self.x_high, (self.pop_size-self.areas_num, self.dim))
                 self.fitness_func = np.array([self.function(part) for part in self.parts])
-            if self.same:
+            self.progress_bar(iteration, self.iterations, name="BEE")
+            if self.same and break_faster:
                 break
         self.plot(**self.kwargs)
         # print(self.best, self.best_dep_val)
+        if history:
+            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
         return self.best, self.best_dep_val
 
 
 if __name__ == "__main__":
     # -------------------Rastrigin-------------------- #
-    # def F(X):
-    #     A = 10
-    #     length = len(X)
-    #     result = A*length
-    #     for x in X:
-    #         result += x**2-A*np.cos(2*np.pi*x)
-    #     return result
-    # bee = BEE(100, 50, 20, 15, 10, 20, [.1, 1], F, [[-5.12, 5.12], [-5.12, 5.12]], d2=True, show=True).run()
+    def F(X):
+        A = 10
+        length = len(X)
+        result = A*length
+        for x in X:
+            result += x**2-A*np.cos(2*np.pi*x)
+        return result
+    bee = BEE(100, 50, 20, 15, 10, 20, [.1, 1], F, [[-5.12, 5.12], [-5.12, 5.12]], d2=True, show=True).run()
 
     # ------------------Rozenbrock------------------- #
     # def F(X):
-    #     # BonkBonk = 1e3
     #     x, y, = X
     #     f1 = (x-1)**3 - y + 1 < 0
     #     f2 = x + y - 2 < 0
@@ -100,7 +103,6 @@ if __name__ == "__main__":
     #         return (1 - x)**2 + 100*(y - x**2)**2
     #     else:
     #         return float('inf')
-    #         # return (1 - x)**2 + 100*(y - x**2)**2 + BonkBonk
 
     # bee = BEE(100, 50, 30, 15, 10, 5, [0, 1], F, [[-1.5, 1.5], [-0.5, 2.5]], d2=True, show=True).run()
 

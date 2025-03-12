@@ -20,9 +20,10 @@ class PSO(Algorithm):
         self.kwargs.update(kwargs)
         show = self.kwargs.get("show", False)
         save_location = self.kwargs.get("save", None)
+        history = self.kwargs.get("history", False)
+        break_faster = self.kwargs.get("break_faster", False)
         for iteration in range(self.iterations):
-            self.progress_bar(iteration, self.iterations, name="PSO")
-            if show or save_location is not None:
+            if show or save_location is not None or history:
                 self.history_parts.append(self.parts.copy())
 
             self.fitnes_func = []
@@ -71,14 +72,17 @@ class PSO(Algorithm):
             if self.best != float("inf") and len(self.history_best) != 0:
                 self.check_if_same(self.best, self.history_best[-1])
 
-            if show or save_location is not None:
-                self.history_fitness_func.append(self.fitnes_func.copy())
+            if show or save_location is not None or history:
+                self.history_fitness_func.append(np.array(self.fitnes_func))
                 self.history_best_dep_val.append(self.best_dep_val.copy())
                 self.history_best.append(self.best)
-            if self.same:
+            self.progress_bar(iteration, self.iterations, name="PSO")
+            if self.same and break_faster:
                 break
         if show or save_location is not None:
             self.plot(**self.kwargs)
+        if history:
+            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
         return self.best, self.best_dep_val
 
 
