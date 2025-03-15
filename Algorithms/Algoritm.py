@@ -42,10 +42,53 @@ class Algorithm:
 
         self.same = False
 
-        self.cnt_max = kwargs.get("count", 3)
+    def run_before(self, **kwargs):
+        self.kwargs.update(kwargs)
+        self.define_kwargs
+
+    @property
+    def define_kwargs(self):
+        self.d1 = self.kwargs.get("d1", False)
+        self.d2 = self.kwargs.get("d2", False)
+        self.d3 = self.kwargs.get("d3", False)
+
+        self.save_path = self.kwargs.get("save", None)
+        self.save_path_photo = self.kwargs.get("savep", None)
+
+        self.progress = self.kwargs.get("progress", True)
+        self.show = self.kwargs.get("show", False)
+        self.plot_do = self.kwargs.get("plot", True)
+
+        self.possible_styles = {"linspace": np.linspace, "arange": np.arange}
+        self.style = self.kwargs.get("style", "linspace")
+        if self.style not in self.possible_styles:
+            raise Exception(f"{self.style} does not exists")
+        self.dots = self.kwargs.get("dots", 500) if self.style == "linspace" else self.kwargs.get("dots", 0.1)
+
+        self.close = self.kwargs.get("close", True)
+        self.label = self.kwargs.get("label", self.__class__.__name__)
+
+        self.history = self.kwargs.get("history", False)
+
         self.cnt = 0
-        self.epsilon = kwargs.get("epsilon", 0.0000001)
-        self.progress = kwargs.get("progress", True)
+        self.cnt_max = self.kwargs.get("count", 3)
+        self.break_faster = self.kwargs.get("break_faster", False)
+        self.epsilon = self.kwargs.get("epsilon", 1e-6)
+
+        self.show_all_population = self.kwargs.get("population", True)
+
+    @property
+    def run_after(self):
+        if self.show or self.save_location is not None:
+            self.plot(**self.kwargs)
+        if self.history:
+            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
+        return self.best, self.best_dep_val
+
+    @property
+    def check(self):
+        if not self.same and self.best != float("inf") and len(self.history_best) != 0:
+            self.check_if_same(self.best, self.history_best[-1])
 
     def check_if_same(self, prev_best, new_best):
         if abs(new_best - prev_best) < self.epsilon:
@@ -56,6 +99,19 @@ class Algorithm:
             return False
         self.cnt = 0
         return False
+
+    @property
+    def save(self):
+        if self.show or self.save_location is not None or self.history:
+            if self.show_all_population:
+                self.history_parts.append(self.parts.copy())
+                self.history_fitness_func.append(self.fitness_func.copy())
+            else:
+                self.history_parts.append(self.parts[:self.pop_size].copy())
+                self.history_fitness_func.append(self.fitness_func[:self.pop_size].copy())
+
+            self.history_best_dep_val.append(self.best_dep_val.copy())
+            self.history_best.append(self.best)
 
     def progress_bar(self, quantity, total, **kwargs):
         if not self.progress:
@@ -69,71 +125,77 @@ class Algorithm:
             # print()
 
     def plot(self, **kwargs):
-        dots = kwargs.get("dots", 500)
-
-        d1 = kwargs.get("d1", False)
-        d2 = kwargs.get("d2", False)
-        d3 = kwargs.get("d3", False)
-
-        save_path = kwargs.get("save", None)
-        save_path_photo = kwargs.get("savep", None)
-
-        show = kwargs.get("show", False)
-        plot = kwargs.get("plot", True)
-
-        if show:
-            plt.plot(list(range(self.iterations))[:len(self.history_best)], self.history_best, label=self.__class__.__name__)
+        if self.show:
+            # if type(self.history_best[0]) is not type(self.history_best[-1]):
+            #     # print(type(self.history_best[0]), type(self.history_best[-1]))
+            #     self.history_best[0] = np.array([self.history_best[0]])
+            #     # print(type(self.history_best[0]), type(self.history_best[-1]))
+            plt.plot(list(range(self.iterations))[:len(self.history_best)], self.history_best, label=self.label)
             plt.grid()
             plt.legend()
-            if save_path_photo is not None:
-                plt.savefig(save_path_photo)
-            if plot:
+            if self.save_path_photo is not None:
+                plt.savefig(self.save_path_photo)
+            if self.plot_do:
                 plt.show()
             else:
-                plt.close()
+                if self.close:
+                    plt.close()
 
-        if self.dim <= 2 and (show or save_path is not None):
+        if self.dim <= 2 and (self.show or self.save_path is not None):
 
-            if d1 or d2:
+            if self.d1 or self.d2:
                 fig, ax1 = plt.subplots()
-            elif d3:
+            elif self.d3:
                 fig = plt.figure(figsize=plt.figaspect(2.))
                 ax1 = fig.add_subplot(1, 1, 1, projection='3d')
-            if d1:
-                self.projection_dep_val = np.linspace(self.x_low, self.x_high, dots)
+            if self.d1:
+                if self.style == "linspace":
+                    self.projection_dep_val = np.linspace(self.x_low, self.x_high, self.dots)
+                elif self.style == "arange":
+                    self.projection_dep_val = np.arange(self.x_low, self.x_high, self.dots)
                 self.projection = np.array([self.function(dot) for dot in self.projection_dep_val])
                 ax1.plot(self.projection_dep_val, self.projection)
-            elif (d2 or d3):
-                self.projection_dep_val = np.linspace(self.x_low, self.x_high, dots)
-                space = np.array([self.projection_dep_val[:, i] for i in range(self.dim)])
+            elif (self.d2 or self.d3):
+                if self.style == "linspace":
+                    self.projection_dep_val = np.linspace(self.x_low, self.x_high, self.dots)
+                    space = np.array([self.projection_dep_val[:, i] for i in range(self.dim)])
+                elif self.style == "arange":
+                    self.projection_dep_val = np.array([np.arange(self.x_low[i], self.x_high[i], self.dots) for i in range(self.dim)])
+                    space = self.projection_dep_val.copy()
                 space = np.meshgrid(*space)
-                self.projection = np.array([[self.function([space[i][j, k] for i in range(self.dim)]) for k in range(dots)] for j in range(dots)])
+                if self.style == "linspace":
+                    self.projection = np.array([[self.function([space[i][j, k] for i in range(self.dim)]) for k in range(self.dots)] for j in range(self.dots)])
+                elif self.style == "arange":
+                    self.projection = self.function(space)
 
                 cs = ax1.contourf(*space, self.projection, cmap="cool")
                 fig.colorbar(cs)
 
-            if (d1 or d2 or d3):
+            if (self.d1 or self.d2 or self.d3):
                 def update(frame):
                     ax1.clear()
-                    ax1.set_title(f"Best solution: {self.history_best[frame]:.5f} | Best dep val: {self.history_best_dep_val[frame]} | Iter {frame}")
-                    if d1:
+                    try:
+                        ax1.set_title(f"Best solution: {self.history_best[frame]:.5f} | Best dep val: {self.history_best_dep_val[frame]} | Iter {frame}")
+                    except TypeError:
+                        ax1.set_title(f"Best solution: {self.history_best[frame]} | Best dep val: {self.history_best_dep_val[frame]} | Iter {frame}")
+                    if self.d1:
                         ax1.plot(self.projection_dep_val, self.projection)
                         ax1.scatter(self.history_parts[frame], self.history_fitness_func[frame], label="Population", c='Black')
                         ax1.scatter(self.history_best_dep_val[frame], self.history_best[frame], label="Best", c='Red')
-                    elif d2:
+                    elif self.d2:
                         ax1.contourf(*space, self.projection, cmap="cool")
                         # print(self.history_best_dep_val[frame], self.history_best[frame])
                         ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], label="Population", c='black')
                         ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], label="Best", c='yellow')
-                    elif d3:
+                    elif self.d3:
                         ax1.plot_surface(*space, self.projection, cmap="cool", alpha=0.8)
                         ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], self.history_fitness_func[frame], label="Population", c='Black')
                         ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], self.history_best[frame], label="Best", c='Red')
                     ax1.legend()
 
                 ani = animation.FuncAnimation(fig=fig, func=update, frames=min(self.iterations, len(self.history_best)), interval=10)
-                if save_path is not None:
-                    ani.save(save_path, fps=10)
-                if show:
+                if self.save_path is not None:
+                    ani.save(self.save_path, fps=10)
+                if self.show:
                     fig.canvas.manager.window.state('zoomed')
                     plt.show()

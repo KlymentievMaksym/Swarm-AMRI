@@ -28,11 +28,8 @@ class FF(Algorithm):
         #     return parts
         # self.parts = run_through(self.pop_size, self.parts, self.function, self.beta_max, self.gamma, self.alpha, self.limits, self.dim)
         # firefly_indexes = np.where(self.fitness_func < self.function(self.parts[k]))[0]
-        self.kwargs.update(kwargs)
-        show = self.kwargs.get("show", False)
-        save_location = self.kwargs.get("save", None)
-        history = self.kwargs.get("history", False)
-        break_faster = self.kwargs.get("break_faster", False)
+        self.run_before(**kwargs)
+
         # self.beta_max = np.random.uniform(self.low, self.high)
         # self.gamma = np.random.uniform(self.low, self.high)
         # self.alpha = np.random.uniform(self.low, self.high)
@@ -60,19 +57,14 @@ class FF(Algorithm):
                             self.parts[k, i] = np.round(self.parts[k, i])
                         self.fitness_func[k] = self.function(self.parts[k])
             ks = np.argmin(self.fitness_func)
-            if self.function(self.parts[ks]) < self.best:
+            new_best = self.function(self.parts[ks])
+            if new_best < self.best:
+                self.best = new_best
                 self.best_dep_val = self.parts[ks]
-                self.best = self.function(self.best_dep_val)
 
-            if self.best != float("inf") and len(self.history_best) != 0:
-                self.check_if_same(self.best, self.history_best[-1])
+            self.check
+            self.save
 
-            if show or save_location is not None or history:
-                self.history_parts.append(self.parts.copy())
-                self.history_fitness_func.append(self.fitness_func.copy())
-
-                self.history_best.append(self.best)
-                self.history_best_dep_val.append(self.best_dep_val.copy())
             if iteration != 0 and iteration % 10 == 0:
                 if (np.array(self.history_best[iteration-10:iteration]) == float("inf")).all():
                 # if np.unique(np.array(self.history_best[iteration-10:iteration])).size == 1:
@@ -82,13 +74,10 @@ class FF(Algorithm):
                     self.fitness_func = np.array([self.function(part) for part in self.parts])
 
             self.progress_bar(iteration, self.iterations, name="Firefly")
-            if self.same and break_faster:
+            if self.same and self.break_faster:
                 break
-        if show or save_location is not None:
-            self.plot(**self.kwargs)
-        if history:
-            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
-        return self.best, self.best_dep_val
+        return self.run_after
+
 
 
 if __name__ == "__main__":
@@ -169,9 +158,9 @@ if __name__ == "__main__":
         if f1 and f2 and f3 and f4 and f5 and f6 and f7 and f8 and f9 and f10 and f11:
             return 0.7854*x1*x2**2*(3.3333*x3**2 + 14.9334*x3 - 43.0934) - 1.508*x1*(x6**2 + x7**2) + 7.4777*(x6**3 + x7**3) + 0.7854*(x4*x6**2 + x5*x7**2)
         return float('inf')
-        
 
-    ff = FF(100, 50, [0.1, 1], F, [[2.6, 3.6], [0.7, 0.8], [17, 28], [7.3, 8.3], [7.8, 8.3], [2.9, 3.9], [5.0, 5.5]], d2=False, show=True, integer=[2])
+
+    ff = FF(100, 500, [0.1, 1], F, [[2.6, 3.6], [0.7, 0.8], [17, 28], [7.3, 8.3], [7.8, 8.3], [2.9, 3.9], [5.0, 5.5]], d2=False, show=True, integer=[2], break_faster=True)
     result = ff.run()
     print(*result)
 

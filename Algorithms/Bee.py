@@ -20,22 +20,18 @@ class BEE(Algorithm):
         # self.alpha = alpha
 
     def run(self, **kwargs):
-        self.kwargs.update(kwargs)
-        show = self.kwargs.get("show", False)
-        save_location = self.kwargs.get("save", None)
-        history = self.kwargs.get("history", False)
-        break_faster = self.kwargs.get("break_faster", False)
+        self.run_before(**kwargs)
+
         for iteration in range(self.iterations):
-            prev_best = self.best
-            self.best = min(self.best, self.fitness_func[np.argmin(self.fitness_func)])
-            if prev_best != self.best:
+            # Bee search phase
+            self.parts[self.areas_num:] = np.random.uniform(self.x_low, self.x_high, (self.pop_size-self.areas_num, self.dim))
+            self.fitness_func = np.array([self.function(part) for part in self.parts])
+
+            new_best = self.fitness_func[np.argmin(self.fitness_func)]
+            if new_best < self.best:
+                self.best = new_best
                 self.best_dep_val = self.parts[np.argmin(self.fitness_func)]
 
-            if self.best != float("inf") and len(self.history_best) != 0:
-                self.check_if_same(self.best, self.history_best[-1])
-
-            self.history_best_dep_val.append(self.best_dep_val.copy())
-            self.history_best.append(self.best)
 
             self.parts = self.parts[np.argsort(self.fitness_func)]
             self.fitness_func = np.sort(self.fitness_func)
@@ -69,32 +65,26 @@ class BEE(Algorithm):
                 if fitness_func[z] < self.function(self.parts[l]):
                     self.parts[l] = x[z]
                     self.fitness_func[l] = fitness_func[z]
-            if show or save_location is not None or history:
-                self.history_parts.append(self.parts.copy())
-                self.history_fitness_func.append(self.fitness_func.copy())
-                # Bee search phase
-                self.parts[self.areas_num:] = np.random.uniform(self.x_low, self.x_high, (self.pop_size-self.areas_num, self.dim))
-                self.fitness_func = np.array([self.function(part) for part in self.parts])
+
+            self.check
+            self.save
+
             self.progress_bar(iteration, self.iterations, name="BEE")
-            if self.same and break_faster:
+            if self.same and self.break_faster:
                 break
-        self.plot(**self.kwargs)
-        # print(self.best, self.best_dep_val)
-        if history:
-            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
-        return self.best, self.best_dep_val
+        return self.run_after
 
 
 if __name__ == "__main__":
     # -------------------Rastrigin-------------------- #
-    def F(X):
-        A = 10
-        length = len(X)
-        result = A*length
-        for x in X:
-            result += x**2-A*np.cos(2*np.pi*x)
-        return result
-    bee = BEE(100, 50, 20, 15, 10, 20, [.1, 1], F, [[-5.12, 5.12], [-5.12, 5.12]], d2=True, show=True).run()
+    # def F(X):
+    #     A = 10
+    #     length = len(X)
+    #     result = A*length
+    #     for x in X:
+    #         result += x**2-A*np.cos(2*np.pi*x)
+    #     return result
+    # bee = BEE(100, 50, 20, 15, 10, 20, [.1, 1], F, [[-5.12, 5.12], [-5.12, 5.12]], d2=True, show=True, break_faster=True).run()
 
     # ------------------Rozenbrock------------------- #
     # def F(X):
@@ -143,26 +133,26 @@ if __name__ == "__main__":
     # bee = BEE(100, 50, 50, 15, 8, [0, 1], F, [[-1.25, 1.25], [-1.25, 1.25]], d2=True, show=True).run()
 
     # -----------------Reductor---------------------- #
-    # def F(X):
-    #     x1, x2, x3, x4, x5, x6, x7, = X
-    #     f1 = 27 / (x1 * x2**2 * x3) - 1  <= 0
-    #     f2 = 397.5 / (x1 * x2**2 * x3**2) - 1 <= 0
-    #     f3 = 1.93 * x4**3 / (x2 * x3 * x6**4) - 1 <= 0
-    #     f4 = 1.93 / (x2 * x3 * x7**4) - 1 <= 0
-    #     f5 = 1.0/(110 * x6**3) * np.sqrt(((745*x4) / (x2 * x3))**2 + 16.9 * 10**6) - 1 <= 0
-    #     f6 = 1.0/(85 * x7**3) * np.sqrt(((745*x5) / (x2 * x3))**2 + 157.5 * 10**6) - 1 <= 0
-    #     f7 = (x2*x3) / 40 - 1 <= 0
-    #     f8 = 5*x2 / x1 - 1 <= 0
-    #     f9 = x1 / (12 * x2) - 1 <= 0
-    #     f10 = (1.5 * x6 + 1.9) / x4 - 1 <= 0
-    #     f11 = (1.1 * x7 + 1.9) / x5 - 1 <= 0
-    #     if f1 and f2 and f3 and f4 and f5 and f6 and f7 and f8 and f9 and f10 and f11:
-    #         return 0.7854*x1*x2**2*(3.3333*x3**2 + 14.9334*x3 - 43.0934) - 1.508*x1*(x6**2 + x7**2) + 7.4777*(x6**3 + x7**3) + 0.7854*(x4*x6**2 + x5*x7**2)
-    #     return float('inf')
+    def F(X):
+        x1, x2, x3, x4, x5, x6, x7, = X
+        f1 = 27 / (x1 * x2**2 * x3) - 1  <= 0
+        f2 = 397.5 / (x1 * x2**2 * x3**2) - 1 <= 0
+        f3 = 1.93 * x4**3 / (x2 * x3 * x6**4) - 1 <= 0
+        f4 = 1.93 / (x2 * x3 * x7**4) - 1 <= 0
+        f5 = 1.0/(110 * x6**3) * np.sqrt(((745*x4) / (x2 * x3))**2 + 16.9 * 10**6) - 1 <= 0
+        f6 = 1.0/(85 * x7**3) * np.sqrt(((745*x5) / (x2 * x3))**2 + 157.5 * 10**6) - 1 <= 0
+        f7 = (x2*x3) / 40 - 1 <= 0
+        f8 = 5*x2 / x1 - 1 <= 0
+        f9 = x1 / (12 * x2) - 1 <= 0
+        f10 = (1.5 * x6 + 1.9) / x4 - 1 <= 0
+        f11 = (1.1 * x7 + 1.9) / x5 - 1 <= 0
+        if f1 and f2 and f3 and f4 and f5 and f6 and f7 and f8 and f9 and f10 and f11:
+            return 0.7854*x1*x2**2*(3.3333*x3**2 + 14.9334*x3 - 43.0934) - 1.508*x1*(x6**2 + x7**2) + 7.4777*(x6**3 + x7**3) + 0.7854*(x4*x6**2 + x5*x7**2)
+        return float('inf')
 
-    # bee = BEE(100, 500, 20, 15, 10, 5, [0.1, 1], F, [[2.6, 3.6], [0.7, 0.8], [17, 28], [7.3, 8.3], [7.8, 8.3], [2.9, 3.9], [5.0, 5.5]], d2=False, show=True, integer=[2])
-    # result = bee.run()
-    # print(*result)
+    bee = BEE(100, 500, 20, 15, 10, 5, [0.1, 1], F, [[2.6, 3.6], [0.7, 0.8], [17, 28], [7.3, 8.3], [7.8, 8.3], [2.9, 3.9], [5.0, 5.5]], d2=False, show=True, integer=[2], break_faster=True)
+    result = bee.run()
+    print(*result)
     # print(F(result[1]))
 
     # -----------------Trail----------------------------- #

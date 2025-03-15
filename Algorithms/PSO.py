@@ -17,16 +17,9 @@ class PSO(Algorithm):
         self.best_personal_dep_val = [[0 for i in range(self.dim)] for j in range(self.pop_size)]
 
     def run(self, **kwargs):
-        self.kwargs.update(kwargs)
-        show = self.kwargs.get("show", False)
-        save_location = self.kwargs.get("save", None)
-        history = self.kwargs.get("history", False)
-        break_faster = self.kwargs.get("break_faster", False)
+        self.run_before(**kwargs)
         for iteration in range(self.iterations):
-            if show or save_location is not None or history:
-                self.history_parts.append(self.parts.copy())
-
-            self.fitnes_func = []
+            # self.fitness_func = []
             for i in range(self.pop_size):
                 # low_un = 0.000000001
                 a1 = np.random.uniform(self.low, self.high)
@@ -36,15 +29,15 @@ class PSO(Algorithm):
                 # r1 = np.random.uniform(0, 1, self.dim)
                 # r2 = np.random.uniform(0, 1, self.dim)
 
-                self.fitnes_func.append(self.function(self.parts[i]))
+                self.fitness_func[i] = self.function(self.parts[i])
 
                 prev_best_personal = self.best_personal[i]
-                self.best_personal[i] = min(self.best_personal[i], self.fitnes_func[i])
+                self.best_personal[i] = min(self.best_personal[i], self.fitness_func[i])
                 if prev_best_personal != self.best_personal[i]:
                     self.best_personal_dep_val[i] = self.parts[i].copy()
 
                 prev_best = self.best
-                self.best = min(self.best, self.fitnes_func[i])
+                self.best = min(self.best, self.fitness_func[i])
                 if prev_best != self.best:
                     self.check_if_same(prev_best, self.best)
                     self.best_dep_val = self.parts[i].copy()
@@ -69,33 +62,26 @@ class PSO(Algorithm):
                         self.speed[i][l] = -self.speed[i][l]
                 for inte in self.integer:
                     self.parts[i, inte] = np.round(self.parts[i, inte])
-            if self.best != float("inf") and len(self.history_best) != 0:
-                self.check_if_same(self.best, self.history_best[-1])
 
-            if show or save_location is not None or history:
-                self.history_fitness_func.append(np.array(self.fitnes_func))
-                self.history_best_dep_val.append(self.best_dep_val.copy())
-                self.history_best.append(self.best)
+            self.check
+            self.save
+
             self.progress_bar(iteration, self.iterations, name="PSO")
-            if self.same and break_faster:
+            if self.same and self.break_faster:
                 break
-        if show or save_location is not None:
-            self.plot(**self.kwargs)
-        if history:
-            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
-        return self.best, self.best_dep_val
+        return self.run_after
 
 
 if __name__ == "__main__":
     # -------------------Rastrigin-------------------- #
-    def F(X):
-        A = 10
-        length = len(X)
-        result = A*length
-        for x in X:
-            result += x**2-A*np.cos(2*np.pi*x)
-        return result
-    pso = PSO(40, 70, [0, 4], [-.1, .1], F, [[-5.12, 5.12], [-5.12, 5.12]], d2=True, show=True).run()
+    # def F(X):
+    #     A = 10
+    #     length = len(X)
+    #     result = A*length
+    #     for x in X:
+    #         result += x**2-A*np.cos(2*np.pi*x)
+    #     return result
+    # pso = PSO(40, 70, [0, 4], [-.15, .15], F, [[-5.12, 5.12], [-5.12, 5.12]], d2=True, show=True, style="arange").run()
 
     # ------------------Rozenbrock------------------- #
     # def F(X):
@@ -146,26 +132,26 @@ if __name__ == "__main__":
     # pso = PSO(40, 70, [0, 4], [-.1, .1], F, [[-1.25, 1.25], [-1.25, 1.25]], d2=True, show=True).run()
 
     # -----------------Reductor---------------------- #
-    # def F(X):
-    #     x1, x2, x3, x4, x5, x6, x7, = X
-    #     f1 = 27 / (x1 * x2**2 * x3) - 1  <= 0
-    #     f2 = 397.5 / (x1 * x2**2 * x3**2) - 1 <= 0
-    #     f3 = 1.93 * x4**3 / (x2 * x3 * x6**4) - 1 <= 0
-    #     f4 = 1.93 / (x2 * x3 * x7**4) - 1 <= 0
-    #     f5 = 1.0/(110 * x6**3) * np.sqrt(((745*x4) / (x2 * x3))**2 + 16.9 * 10**6) - 1 <= 0
-    #     f6 = 1.0/(85 * x7**3) * np.sqrt(((745*x5) / (x2 * x3))**2 + 157.5 * 10**6) - 1 <= 0
-    #     f7 = (x2*x3) / 40 - 1 <= 0
-    #     f8 = 5*x2 / x1 - 1 <= 0
-    #     f9 = x1 / (12 * x2) - 1 <= 0
-    #     f10 = (1.5 * x6 + 1.9) / x4 - 1 <= 0
-    #     f11 = (1.1 * x7 + 1.9) / x5 - 1 <= 0
-    #     if f1 and f2 and f3 and f4 and f5 and f6 and f7 and f8 and f9 and f10 and f11:
-    #         return 0.7854*x1*x2**2*(3.3333*x3**2 + 14.9334*x3 - 43.0934) - 1.508*x1*(x6**2 + x7**2) + 7.4777*(x6**3 + x7**3) + 0.7854*(x4*x6**2 + x5*x7**2)
-    #     return float('inf')
+    def F(X):
+        x1, x2, x3, x4, x5, x6, x7, = X
+        f1 = 27 / (x1 * x2**2 * x3) - 1  <= 0
+        f2 = 397.5 / (x1 * x2**2 * x3**2) - 1 <= 0
+        f3 = 1.93 * x4**3 / (x2 * x3 * x6**4) - 1 <= 0
+        f4 = 1.93 / (x2 * x3 * x7**4) - 1 <= 0
+        f5 = 1.0/(110 * x6**3) * np.sqrt(((745*x4) / (x2 * x3))**2 + 16.9 * 10**6) - 1 <= 0
+        f6 = 1.0/(85 * x7**3) * np.sqrt(((745*x5) / (x2 * x3))**2 + 157.5 * 10**6) - 1 <= 0
+        f7 = (x2*x3) / 40 - 1 <= 0
+        f8 = 5*x2 / x1 - 1 <= 0
+        f9 = x1 / (12 * x2) - 1 <= 0
+        f10 = (1.5 * x6 + 1.9) / x4 - 1 <= 0
+        f11 = (1.1 * x7 + 1.9) / x5 - 1 <= 0
+        if f1 and f2 and f3 and f4 and f5 and f6 and f7 and f8 and f9 and f10 and f11:
+            return 0.7854*x1*x2**2*(3.3333*x3**2 + 14.9334*x3 - 43.0934) - 1.508*x1*(x6**2 + x7**2) + 7.4777*(x6**3 + x7**3) + 0.7854*(x4*x6**2 + x5*x7**2)
+        return float('inf')
 
-    # pso = PSO(100, 500, [0, 4], [-1.1, 1.1], F, [[2.6, 3.6], [0.7, 0.8], [17, 28], [7.3, 8.3], [7.8, 8.3], [2.9, 3.9], [5.0, 5.5]], d2=False, show=True, integer=[2])
-    # result = pso.run()
-    # print(*result)
+    pso = PSO(100, 500, [0, 4], [-1.1, 1.1], F, [[2.6, 3.6], [0.7, 0.8], [17, 28], [7.3, 8.3], [7.8, 8.3], [2.9, 3.9], [5.0, 5.5]], d2=False, show=True, integer=[2])
+    result = pso.run()
+    print(*result)
 
     # -----------------Trail----------------------------- #
     # def F(X):

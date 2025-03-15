@@ -14,11 +14,7 @@ class GrayWolf(Algorithm):
         self.steps = np.random.uniform(*self.step_limits, (self.pop_size, self.dim))
 
     def run(self, **kwargs):
-        self.kwargs.update(kwargs)
-        show = self.kwargs.get("show", False)
-        save_location = self.kwargs.get("save", None)
-        history = self.kwargs.get("history", False)
-        break_faster = self.kwargs.get("break_faster", False)
+        self.run_before(**kwargs)
 
         # print(self.parts)
         # print(self.parts != self.best_dep_val)
@@ -34,22 +30,14 @@ class GrayWolf(Algorithm):
             self.best = np.min(self.fitness_func)
             self.best_dep_val = self.parts[np.argmin(self.fitness_func)]
 
-            if self.best != float("inf") and len(self.history_best) != 0:
-                self.check_if_same(self.best, self.history_best[-1])
+            self.check
+            self.save
 
-            if show or save_location is not None or history:
-                self.history_parts.append(self.parts.copy())
-                self.history_fitness_func.append(self.fitness_func.copy())
-
-                self.history_best.append(self.best)
-                self.history_best_dep_val.append(self.best_dep_val.copy())
             self.progress_bar(iteration, self.iterations, name="GrayWolf")
-            if self.same and break_faster:
+            if self.same and self.break_faster:
                 break
-        self.plot(**self.kwargs)
-        if history:
-            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
-        return self.best, self.best_dep_val
+        return self.run_after
+
 
 
 if __name__ == "__main__":
@@ -57,4 +45,4 @@ if __name__ == "__main__":
         x, y = X
         return x**2 + 2*y**2 - 0.3 * np.cos(3*np.pi*x) - 0.4 * np.cos(4*np.pi*y) + 0.7
 
-    GrayWolf(50, 50, [0.1, 1], Bohachevsky, [[-2, 2] for _ in range(2)], d2=True, show=True, break_faster=True).run()
+    GrayWolf(50, 50, [0.1, 1], Bohachevsky, [[-2, 2] for _ in range(2)], d2=True, show=True, break_faster=False).run()

@@ -24,11 +24,8 @@ class Genetic(Algorithm):
         # print(np.append(self.parts_bits, self.parts_child_bits, axis=0).shape)
 
     def run(self, **kwargs):
-        self.kwargs.update(kwargs)
-        show = self.kwargs.get("show", False)
-        save_location = self.kwargs.get("save", None)
-        history = self.kwargs.get("history", False)
-        break_faster = self.kwargs.get("break_faster", False)
+        self.run_before(**kwargs)
+
         for iteration in range(self.iterations):
             # SELECTION
             for i in range(self.child_size):
@@ -62,28 +59,13 @@ class Genetic(Algorithm):
             self.best = self.fitness_func[0]
             self.best_dep_val = self.parts[0]
 
-            if self.best != float("inf") and len(self.history_best) != 0:
-                self.check_if_same(self.best, self.history_best[-1])
-
-            if show or save_location is not None or history:
-                show_all_population = self.kwargs.get("population", False)
-                if show_all_population:
-                    self.history_parts.append(self.parts.copy())
-                    self.history_fitness_func.append(self.fitness_func.copy())
-                else:
-                    self.history_parts.append(self.parts[:self.pop_size].copy())
-                    self.history_fitness_func.append(self.fitness_func[:self.pop_size].copy())
-
-                self.history_best.append(self.best)
-                self.history_best_dep_val.append(self.best_dep_val.copy())
+            self.check
+            self.save
 
             self.progress_bar(iteration, self.iterations, name="Genetic")
-            if self.same and break_faster:
+            if self.same and self.break_faster:
                 break
-        self.plot(**self.kwargs)
-        if history:
-            return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
-        return self.best, self.best_dep_val
+        return self.run_after
 
     def Dec(self, parts_bits_i):
         return self.bi2de(parts_bits_i)/(2**self.bit_size-1)*(self.x_high-self.x_low) + self.x_low
@@ -96,15 +78,15 @@ class Genetic(Algorithm):
         return array_to_return
 
 
-# if __name__ == "__main__":
-#     def F(X):
-#         return sum(X)**2
-#     def min_f(X):
-#         x = X
-#         return 5 - 24*x + 17*x**2 - 11/3*x**3 + 1/4*x**4
-#     Genetic(10, 50, 20, 8, min_f, [[0, 7] for _ in range(1)], d1=True, show=True).run()
+if __name__ == "__main__":
+    # def F(X):
+    #     return sum(X)**2
+    # def min_f(X):
+    #     x = X
+    #     return 5 - 24*x + 17*x**2 - 11/3*x**3 + 1/4*x**4
+    # Genetic(10, 50, 20, 8, min_f, [[0, 7] for _ in range(1)], d1=True, show=True).run()
     
-    # def Bohachevsky(X):
-    #     x, y = X
-    #     return x**2 + 2*y**2 - 0.3 * np.cos(3*np.pi*x) - 0.4 * np.cos(4*np.pi*y) + 0.7
-    # Genetic(10, 50, 20, 8, Bohachevsky, [[-2, 2] for _ in range(2)], d2=True, show=True, break_faster=False, population=True).run()
+    def Bohachevsky(X):
+        x, y = X
+        return x**2 + 2*y**2 - 0.3 * np.cos(3*np.pi*x) - 0.4 * np.cos(4*np.pi*y) + 0.7
+    Genetic(10, 50, 20, 8, Bohachevsky, [[-2, 2] for _ in range(2)], d2=True, show=True, break_faster=False, population=False).run()
