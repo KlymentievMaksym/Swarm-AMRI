@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
+from typing import Callable
+
 class Algorithm:
-    def __init__(self, pop_size, iterations, random_limits, function, limits, **kwargs):
+    def __init__(self, pop_size: int, iterations: int, random_limits: list[list[float, float]], function: Callable, limits: list[list[float, float]], **kwargs):
         self.iterations = iterations
         self.pop_size = pop_size
         self.function = function
@@ -27,7 +29,8 @@ class Algorithm:
         self.parts = np.random.uniform(self.x_low, self.x_high, (self.pop_size, self.dim))
         for i in self.integer:
             self.parts[:, i] = np.round(self.parts[:, i])
-        self.fitness_func = np.array([self.function(part) for part in self.parts])
+        # self.fitness_func = np.array([self.function(part) for part in self.parts])
+        self.fitness_func = np.apply_along_axis(self.function, 1, self.parts)
 
         self.best = np.min(self.fitness_func)
         self.best_dep_val = self.parts[np.argmin(self.fitness_func)]
@@ -54,6 +57,8 @@ class Algorithm:
 
         self.save_path = self.kwargs.get("save", None)
         self.save_path_photo = self.kwargs.get("savep", None)
+        self.fps = self.kwargs.get("fps", 30)
+        self.interval = self.kwargs.get("interval", 30)
 
         self.progress = self.kwargs.get("progress", True)
         self.show = self.kwargs.get("show", False)
@@ -77,9 +82,11 @@ class Algorithm:
 
         self.show_all_population = self.kwargs.get("population", True)
 
+        self.random = self.kwargs.get("random", True)
+
     @property
     def run_after(self):
-        if self.show or self.save_location is not None:
+        if self.show or self.save_path is not None:
             self.plot(**self.kwargs)
         if self.history:
             return self.history_best, self.history_best_dep_val, self.history_fitness_func, self.history_parts
@@ -102,7 +109,7 @@ class Algorithm:
 
     @property
     def save(self):
-        if self.show or self.save_location is not None or self.history:
+        if self.show or self.save_path is not None or self.history:
             if self.show_all_population:
                 self.history_parts.append(self.parts.copy())
                 self.history_fitness_func.append(self.fitness_func.copy())
@@ -145,17 +152,17 @@ class Algorithm:
 
             if self.d1 or self.d2:
                 fig, ax1 = plt.subplots()
-            elif self.d3:
+            elif self.d3 and self.dim == 2:
                 fig = plt.figure(figsize=plt.figaspect(2.))
                 ax1 = fig.add_subplot(1, 1, 1, projection='3d')
-            if self.d1:
+            if self.d1 and self.dim == 1:
                 if self.style == "linspace":
                     self.projection_dep_val = np.linspace(self.x_low, self.x_high, self.dots)
                 elif self.style == "arange":
                     self.projection_dep_val = np.arange(self.x_low, self.x_high, self.dots)
                 self.projection = np.array([self.function(dot) for dot in self.projection_dep_val])
                 ax1.plot(self.projection_dep_val, self.projection)
-            elif (self.d2 or self.d3):
+            elif (self.d2 or self.d3) and self.dim == 2:
                 if self.style == "linspace":
                     self.projection_dep_val = np.linspace(self.x_low, self.x_high, self.dots)
                     space = np.array([self.projection_dep_val[:, i] for i in range(self.dim)])
@@ -175,27 +182,27 @@ class Algorithm:
                 def update(frame):
                     ax1.clear()
                     try:
-                        ax1.set_title(f"Best solution: {self.history_best[frame]:.5f} | Best dep val: {self.history_best_dep_val[frame]} | Iter {frame}")
+                        ax1.set_title(f"{self.function.__name__}\nIter {frame}\nBest solution: {self.history_best[frame]:.5f}\nBest dep val: {self.history_best_dep_val[frame]}")
                     except TypeError:
-                        ax1.set_title(f"Best solution: {self.history_best[frame]} | Best dep val: {self.history_best_dep_val[frame]} | Iter {frame}")
-                    if self.d1:
+                        ax1.set_title(f"{self.function.__name__}\nIter {frame}\nBest solution: {self.history_best[frame]}\nBest dep val: {self.history_best_dep_val[frame]}")
+                    if self.d1 and self.dim == 1:
                         ax1.plot(self.projection_dep_val, self.projection)
                         ax1.scatter(self.history_parts[frame], self.history_fitness_func[frame], label="Population", c='Black')
                         ax1.scatter(self.history_best_dep_val[frame], self.history_best[frame], label="Best", c='Red')
-                    elif self.d2:
+                    elif self.d2 and self.dim == 2:
                         ax1.contourf(*space, self.projection, cmap="cool")
                         # print(self.history_best_dep_val[frame], self.history_best[frame])
                         ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], label="Population", c='black')
                         ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], label="Best", c='yellow')
-                    elif self.d3:
+                    elif self.d3 and self.dim == 2:
                         ax1.plot_surface(*space, self.projection, cmap="cool", alpha=0.8)
                         ax1.scatter(*[self.history_parts[frame][:, i] for i in range(self.dim)], self.history_fitness_func[frame], label="Population", c='Black')
                         ax1.scatter(*[self.history_best_dep_val[frame][i] for i in range(self.dim)], self.history_best[frame], label="Best", c='Red')
                     ax1.legend()
 
-                ani = animation.FuncAnimation(fig=fig, func=update, frames=min(self.iterations, len(self.history_best)), interval=10)
+                ani = animation.FuncAnimation(fig=fig, func=update, frames=min(self.iterations, len(self.history_best)), interval=self.interval)
                 if self.save_path is not None:
-                    ani.save(self.save_path, fps=10)
-                if self.show:
+                    ani.save(self.save_path, fps=self.fps)
+                if self.plot_do:
                     fig.canvas.manager.window.state('zoomed')
                     plt.show()
