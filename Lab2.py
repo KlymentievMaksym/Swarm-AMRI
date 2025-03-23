@@ -209,9 +209,9 @@ Trail_limits = [[0.005, 2.0], [0.25, 1.3], [2.0, 15.0]]
 # funcs = [(Reductor, Reductor_limits)]
 # for func, limit in funcs:
 
-#     # PSO(100, 100, [0, 4], [-1.1, 1.1], func, limit, show=True, plot=False, integer=[2]).run()
-#     # BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, show=True, plot=False, integer=[2]).run()
-#     # FF(100, 100, [0, 1], func, limit, show=True, plot=False, integer=[2]).run()
+#     PSO(100, 100, [0, 4], [-1.1, 1.1], func, limit, show=True, plot=True, integer=[2]).run()
+#     BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, show=True, plot=True, integer=[2]).run()
+#     FF(100, 100, [0, 1], func, limit, show=True, plot=True, integer=[2]).run()
 #     # plt.legend()
 #     # plt.grid()
 #     # plt.savefig(f"Lab2/Images/{func.__name__}_one_time.png")
@@ -246,6 +246,9 @@ Trail_limits = [[0.005, 2.0], [0.25, 1.3], [2.0, 15.0]]
 
 # funcs = [(Trail, Trail_limits)]
 # for func, limit in funcs:
+#     PSO(100, 100, [0, 4], [-.1, .1], func, limit, show=True, history=False, break_faster=False, integer=[2]).run()
+#     BEE(100, 100, 25, 13, 7, 4, [0, 1], func, limit, show=True, history=False, break_faster=False, integer=[2]).run()
+#     FF(100, 100, [0, 1], func, limit, show=True, history=False, break_faster=False, integer=[2]).run()
 #     pso = []
 #     for i in range(10):
 #         pso.append(PSO(100, 100, [0, 4], [-.1, .1], func, limit, history=True, break_faster=False, integer=[2]).run()[0])

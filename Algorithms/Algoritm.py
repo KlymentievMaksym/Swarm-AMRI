@@ -6,6 +6,8 @@ import matplotlib.animation as animation
 
 from typing import Callable
 
+from time import time
+
 class Algorithm:
     def __init__(self, pop_size: int, iterations: int, random_limits: list[list[float, float]], function: Callable, limits: list[list[float, float]], **kwargs):
         self.iterations = iterations
@@ -45,9 +47,14 @@ class Algorithm:
 
         self.same = False
 
+        self.time_smooth = max(10, int(0.01*self.iterations))
+        self.time_hist = np.zeros(self.time_smooth)
+        self.time_index = 0
+
     def run_before(self, **kwargs):
         self.kwargs.update(kwargs)
         self.define_kwargs
+        self.prev_time = time()
 
     @property
     def define_kwargs(self):
@@ -83,6 +90,11 @@ class Algorithm:
         self.show_all_population = self.kwargs.get("population", True)
 
         self.random = self.kwargs.get("random", True)
+
+        self.possible_formats = {"hms": ["h ", "m ", "s "], ":": [":", ":", ""]}
+        self.format = self.kwargs.get("format", "hms")
+        if self.format not in self.possible_formats:
+            raise Exception(f"{self.format} does not exists")
 
     @property
     def run_after(self):
@@ -121,14 +133,31 @@ class Algorithm:
             self.history_best.append(self.best)
 
     def progress_bar(self, quantity, total, **kwargs):
+        self.new_time = time()
         if not self.progress:
             return
         name = kwargs.get("name", "No Name")
         percent = (quantity / total) * 100
-        print(f"Progress {name} : {quantity}/{total} ({percent:.2f}%)", end='\r')
-        if quantity == total-1 or (self.same and self.kwargs.get("break_faster", False)):
+        space = "                 "
+
+        time_left = (self.new_time-self.prev_time)*(total - quantity)
+
+        self.time_hist[self.time_index] = time_left
+        self.time_index = (self.time_index + 1) % self.time_smooth
+        time_left = np.mean(self.time_hist)
+
+        time_left_txt = f"{(time_left//3600):.0f}{"{0}"}{(time_left//60 % 60):.0f}{"{1}"}{(time_left % 60):.0f}{"{2}"}"
+
+        time_left_txt = time_left_txt.format(*self.possible_formats[self.format])
+        quantity_txt = str(quantity).zfill(len(str(total)))
+
+        print(f"Progress {name} : {quantity_txt}/{total} ({percent:.2f}%) | {time_left_txt}{space}", end='\r')
+
+        self.prev_time = self.new_time
+        if quantity == total-1 or (self.same and self.break_faster):
             percent = ((quantity+1) / total) * 100
-            print(f"Progress {name} : {quantity+1}/{total} ({percent:.2f}%)")
+            quantity_txt = str(quantity+1).zfill(len(str(total)))
+            print(f"Progress {name} : {quantity_txt}/{total} ({percent:.2f}%){space*2}")
             # print()
 
     def plot(self, **kwargs):
@@ -138,7 +167,10 @@ class Algorithm:
             #     self.history_best[0] = np.array([self.history_best[0]])
             #     # print(type(self.history_best[0]), type(self.history_best[-1]))
             plt.plot(list(range(self.iterations))[:len(self.history_best)], self.history_best, label=self.label)
-            plt.grid()
+            plt.title(self.function.__name__)
+            plt.xlabel("Iterations")
+            plt.ylabel("Fitness func value")
+            plt.grid(True)
             plt.legend()
             if self.save_path_photo is not None:
                 plt.savefig(self.save_path_photo)

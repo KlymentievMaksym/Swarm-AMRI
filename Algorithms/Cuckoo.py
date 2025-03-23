@@ -65,7 +65,7 @@ if __name__ == "__main__":
         return result
 
     Rastrigin_limits = [[-5.12, 5.12]]
-    Cuckoo(500, 1000, 1, 20, 100, [.1, .4], Rastrigin, Rastrigin_limits*2, d2=True, plot=True, show=True, interval=.1, fps=20).run(save="Lab3/Images/Rastrigin.gif")  #, save="Lab3/Images/Rastrigin.gif"
+    Cuckoo(1000, 1000000, .1, 1, 1, [.1, .4], Rastrigin, Rastrigin_limits*20, d2=True, plot=True, show=True, interval=.1, fps=20).run(save="Lab3/Images/Rastrigin.gif")  #, save="Lab3/Images/Rastrigin.gif"
 
     # def Mishri_Berda(X):
     #     x, y, = X
