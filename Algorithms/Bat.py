@@ -85,25 +85,25 @@ class Bat(Algorithm):
 
 
 if __name__ == "__main__":
-    # def Rastrigin(X):
-    #     A = 10
-    #     length = len(X)
-    #     result = A*length
-    #     for x in X:
-    #         result += x**2-A*np.cos(2*np.pi*x)
-    #     return result
+    def Rastrigin(X):
+        A = 10
+        length = len(X)
+        result = A*length
+        for x in X:
+            result += x**2-A*np.cos(2*np.pi*x)
+        return result
 
-    # Rastrigin_limits = [[-5.12, 5.12]]
-    # Bat(1000, 500, .5, 1.5, .5, .5, .5, [.1, .5], [.1, .5], Rastrigin, Rastrigin_limits*2, history=False, d2=True, show=True, random=False, fps=20).run()  # save="Lab3/Images/Rastrigin_bat6.gif"
+    Rastrigin_limits = [[-5.12, 5.12]]
+    Bat(100, 500, .5, 1.5, .5, .5, .5, [.1, .5], [.1, .5], Rastrigin, Rastrigin_limits*2, history=False, d3=True, show=True, random=False, fps=20).run()  # save="Lab3/Images/Rastrigin_bat6.gif"
 
 
-    def Mishri_Berda(X):
-        x, y, = X
-        f1 = (x+5)**2+(y+5)**2 < 25
-        if f1:
-            return np.exp((1-np.cos(x))**2)*np.sin(y) + np.exp((1-np.sin(y))**2)*np.cos(x) + (x-y)**2
-        else:
-            return float('inf')
+    # def Mishri_Berda(X):
+    #     x, y, = X
+    #     f1 = (x+5)**2+(y+5)**2 < 25
+    #     if f1:
+    #         return np.exp((1-np.cos(x))**2)*np.sin(y) + np.exp((1-np.sin(y))**2)*np.cos(x) + (x-y)**2
+    #     else:
+    #         return float('inf')
 
-    Mishri_Berda_limits = [[-10, 0], [-6.5, 0]]
-    Bat(50, 50, .5, 1.9, .1, .5, .5, [.1, .3], [.1, 1], Mishri_Berda, Mishri_Berda_limits, d2=True, plot=True, show=True, fps=60, random=False).run()  #, save="Lab3/Images/Mishri_Berda.gif"
+    # Mishri_Berda_limits = [[-10, 0], [-6.5, 0]]
+    # Bat(50, 50, .5, 1.9, .1, .5, .5, [.1, .3], [.1, 1], Mishri_Berda, Mishri_Berda_limits, d2=True, plot=True, show=True, fps=60, random=False).run()  #, save="Lab3/Images/Mishri_Berda.gif"
