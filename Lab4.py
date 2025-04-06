@@ -37,5 +37,18 @@ for i, j, value in data:
 # print(data)
 # print(matrix)
 
-plt.imshow(matrix>0, cmap="binary")
+# plt.imshow(matrix>0, cmap="binary")
+# plt.show()
+
+N = 4
+dfi = 2 * np.pi / N
+
+x = np.zeros(N)
+y = np.zeros(N)
+
+for i in range(N):
+    x[i] = np.cos(i * dfi)
+    y[i] = np.sin(i * dfi)
+
+plt.plot(x, y, "o")
 plt.show()
