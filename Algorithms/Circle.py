@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def Circle(N, plot=False):
+def Circle(N: int, plot: bool = False):
     dfi = 2 * np.pi / N
 
     x = np.zeros(N)
