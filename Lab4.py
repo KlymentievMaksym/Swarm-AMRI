@@ -1,14 +1,12 @@
 import numpy as np
 
-import matplotlib.pyplot as plt
+from Algorithms.GeneticRoute import GeneticRoute
 
 with open("./Lab4/Data/xqf131.tsp", 'r') as fr:
     text = fr.read()
 
 
 info_data = text.split("NODE_COORD_SECTION")
-
-# print(text)
 
 info = info_data[0]
 info = info.split("\n")
@@ -18,37 +16,6 @@ info = {part.split(" ")[0]: part.split(" ")[2] for part in info}
 data = info_data[1]
 data = data.split("\n")
 data = data[1:-2]
-data = [part.split(" ") for part in data]
-data = [list(map(int, (i, j, value))) for value, i, j in data]
+data = np.array([list(map(int, part.split(" "))) for part in data])
 
-# print(data)
-ofset = 1
-i_max = max(data, key=lambda x: x[0])[0] + 1 + 2 * ofset
-j_max = max(data, key=lambda x: x[1])[1] + 1 + 2 * ofset
-
-dim = int(info.get("DIMENSION"))
-matrix = np.zeros((i_max, j_max))
-
-# for value, j, i in data:
-for i, j, value in data:
-    matrix[i+ofset, j+ofset] = value
-
-# print(info)
-# print(data)
-# print(matrix)
-
-# plt.imshow(matrix>0, cmap="binary")
-# plt.show()
-
-N = 4
-dfi = 2 * np.pi / N
-
-x = np.zeros(N)
-y = np.zeros(N)
-
-for i in range(N):
-    x[i] = np.cos(i * dfi)
-    y[i] = np.sin(i * dfi)
-
-plt.plot(x, y, "o")
-plt.show()
+GeneticRoute(1000, 5000, 5000, 0.5, data[:, 1:]).run(show_plot=False, show_plot_animation=True, show_convergence=False, save_plot="./Lab4/Images/an.4.gif", save_convergence="./Lab4/Images/conv.4.png")  #, save_plot="./Lab4/Images/an.3.png", save_convergence="./Lab4/Images/conv.3.png"

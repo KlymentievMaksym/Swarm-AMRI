@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def Circle(N: int, plot: bool = False):
+def Circle(N: int, plot: bool = False, random: bool = False):
     dfi = 2 * np.pi / N
 
     x = np.zeros(N)
@@ -15,10 +15,11 @@ def Circle(N: int, plot: bool = False):
     if plot:
         plt.plot(x, y, "o")
 
-    way = np.array(range(N))
-    np.random.shuffle(way)
-    x = x[way]
-    y = y[way]
+    if random:
+        way = np.array(range(N))
+        np.random.shuffle(way)
+        x = x[way]
+        y = y[way]
     s = np.array([np.sqrt((x[i+1] - x[i])**2 + (y[i+1] - y[i])**2) for i in range(N-1)])
     s = np.append(s, np.sqrt((x[-1] - x[0])**2 + (y[-1] - y[0])**2))
     if plot:
@@ -40,4 +41,4 @@ if __name__ == "__main__":
     # plt.plot(a[:b, 0], a[:b, 1], "o")
     # # print(a)
     # plt.show()
-    print(Circle(3, plot=True))
+    print(np.sum(Circle(10, plot=False)[:, 2]))
