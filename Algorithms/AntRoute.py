@@ -67,7 +67,10 @@ class AntRoute(AlgoritmRoute):
 
     def __pheromon_update(self, route_index: int):
         # TODO update pheromon for all routes
-        self.delta_pheromon[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] += self.Q/self.fitness(self.routes[route_index, :self.next_index[route_index] + 1], self.graph)
+        pheromon_to_add = self.Q/self.fitness(self.routes[route_index, :self.next_index[route_index] + 1], self.graph)
+
+        self.delta_pheromon[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] += pheromon_to_add
+        self.delta_pheromon[self.routes[route_index, self.next_index[route_index]], self.routes[route_index, self.next_index[route_index]-1]] += pheromon_to_add
         # self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] = (1 - self.rho) * self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] + self.Q/self.fitness(self.routes[route_index, :self.next_index[route_index] + 1], self.graph)
         self.next_index[route_index] += 1
 
@@ -133,7 +136,7 @@ class AntRoute(AlgoritmRoute):
 
 if __name__ == "__main__":
     # graph = {0: [(1, 10), (3, 5)], 1: [(0, 10), (2, 5)], 2: [(1, 5), (3, 10)], 3: [(0, 5), (2, 10)]}
-    ar = AntRoute(20, 100, 0.6,  0.9,  0.3, 28.).run(show_plot_animation=True, every=1)  # , graph
+    ar = AntRoute(10, 100, 0.5,  0.5,  0.5, 100).run(show_plot_animation=True, every=1)  # , graph
 
 # import numpy as np
 # import matplotlib.pyplot as plt
