@@ -30,8 +30,8 @@ def Circle(N: int, plot: bool = False, random: bool = False):
 
 
 if __name__ == "__main__":
-    # b = 10
-    # a = Circle(b, plot=False)
+    b = 10
+    a = Circle(b, plot=False)
     # N = 100
     # # print(a)
     # for i in range(N):
@@ -39,6 +39,6 @@ if __name__ == "__main__":
     # for j in range(N+1):
     #     plt.plot(a[(j+0)*b:(j+1)*b, 0], a[(j+0)*b:(j+1)*b, 1])
     # plt.plot(a[:b, 0], a[:b, 1], "o")
-    # # print(a)
+    print(a[0, :])
     # plt.show()
-    print(np.sum(Circle(10, plot=False)[:, 2]))
+    print(np.sum(Circle(5, plot=True)[:, 2]))

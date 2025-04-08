@@ -41,7 +41,7 @@ class GeneticRoute(AlgoritmRoute):
         self.prerun(**kwargs)
         for iteration in tqdm(
             range(self.iterations),
-            desc="Processing",
+            desc=f"Processing {self.__class__.__name__}",
             unit="step",
             bar_format="{l_bar}{bar:40}{r_bar}",
             colour='cyan'
@@ -117,4 +117,4 @@ class GeneticRoute(AlgoritmRoute):
 
 if __name__ == "__main__":
     # GeneticRoute(300, 1000, 1000, 0.5).run(show_animation=True, show_convergence=False, every=1)
-    GeneticRoute(20, 100, 100, 0.5).run(show_animation=True, show_convergence=True, show_convergence_animation=True, plot_convergence=True, plot_animation=True, every=1) #, save_animation="./Lab4/Images/an.2.gif", save_convergence="./Lab4/Images/conv.2.gif")
+    GeneticRoute(20, 100, 100, 0.5).run(show_plot_animation=True, show_convergence=True, show_convergence_animation=False, plot_convergence=True, plot_plot=True, every=1) #, save_animation="./Lab4/Images/an.2.gif", save_convergence="./Lab4/Images/conv.2.gif")

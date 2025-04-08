@@ -49,12 +49,13 @@ class AlgoritmRoute:
 
         self.kwargs = kwargs
 
+    def distance(self, a: np.ndarray, b: np.ndarray):
+        return np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
+
     # @property
     def save(self, iteration: int):
         self.history_best_f[iteration] = self.best_f
-        # self.history_best_f.append(self.best_f)
         self.history_best_routes[iteration] = self.best_routes.copy()
-        # self.history_best_routes.append(self.best_routes.copy())
 
     @property
     def define_kwargs(self):

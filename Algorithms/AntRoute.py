@@ -4,149 +4,137 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-class AntRoute:
-    def __init__(self, pop_size: int, iterations: int, alpha: float, beta: float, rho: float, graph: np.ndarray | dict, **kwargs):
-        self.pop_size = pop_size
-        self.iterations = iterations
+import threading
+import numba as nb
+import concurrent.futures
+from multiprocessing import Pool
+
+if __name__ == "__main__" or __name__ == "__mp_main__":
+    from AlgoritmRoute import AlgoritmRoute
+    from AlgoritmRoute import tqdm
+    # from Circle import Circle
+else:
+    from .AlgoritmRoute import AlgoritmRoute
+    from .AlgoritmRoute import tqdm
+    # from .Circle import Circle
+
+
+class AntRoute(AlgoritmRoute):
+    def __init__(self, pop_size: int, iterations: int, alpha: float, beta: float, rho: float, Q: int, graph: np.ndarray | dict = None, threads_count: int = 4, **kwargs):
+        super().__init__(pop_size, iterations, graph, **kwargs)
 
         self.alpha = alpha
         self.beta = beta
         self.rho = rho
 
-        self.Q = np.random.randint(1, 11)
+        # self.Q = np.random.randint(1, 111)
+        self.Q = Q
 
-        available_types = {dict: "dict", np.ndarray: "matrix"}
-        self.graph_type = available_types.get(type(graph), None)
-        if self.graph_type is None:
-            raise TypeError(f"Graph type {type(graph)} not supported")
-        self.graph = graph
-
-        # TODO REDO dict to matrix
-        match self.graph_type:
-            case "dict":
-                self.dim = len(self.graph)
-                self.names = list(self.graph.keys())
-                matrix = np.zeros((self.dim, self.dim))
-                for key, values in self.graph.items():
-                    for val in values:
-                        matrix[self.names.index(key), self.names.index(val[0])] = val[1]
-                self.graph = matrix
-            case "matrix":
-                if self.graph.shape[0] != self.graph.shape[1]:
-                    raise ValueError("Graph must be a square matrix")
-                self.dim = self.graph.shape[0]
-        # print(self.graph)
-        self.parts = np.random.randint(0, self.dim, pop_size)
-        self.parts = np.array([2, 3, 1, 2, 2, 0, 1, 2, 2, 2])
-        self.parts_start = self.parts.copy()
-        self.parts_best = np.zeros((self.pop_size, self.dim), dtype=int)
-        self.parts_best[:, 0] = self.parts.copy()
-        self.parts_best_count = np.ones(self.pop_size, dtype=int)
-        self.best_parts = np.zeros(self.dim)
-        self.best = float("inf")
-        # print(self.parts)
+        self.routes = np.zeros((self.pop_size, self.dim), dtype=int)
+        self.routes[:, 0] = np.random.randint(0, self.dim, self.pop_size)
         self.pheromon_level = np.zeros((self.dim, self.dim)) + 1e-6
-        # print(self.pheromon_level)
+        self.parts_taboo_list = np.zeros((self.pop_size, self.dim), dtype=int)
+        # for route_index in range(self.pop_size):
+        #     self.parts_taboo_list[route_index, self.routes[route_index, 0]] = 1
 
-        self.parts_taboo_list = np.zeros((self.pop_size, self.dim))
-        # for part_index in range(self.pop_size):
-        #     self.parts_taboo_list[part_index, self.parts[part_index]] = 1
+        self.next_index = np.ones(self.pop_size, dtype=int)
+        # print(self.routes)
         # print(self.parts_taboo_list)
 
-        self.history_parts = []
-        self.history_parts_best = []
-        self.history_best = []
-        self.history_best_parts = []
-        # self.history_parts_prev = []
         self.history_pheromon_level = []
         self.history_parts_taboo_list = []
 
-    def __forget(self, part_index: int):
-        self.parts_taboo_list[part_index] = np.zeros(self.dim)
-        # self.parts_taboo_list[part_index, part_index] = 1
-        self.parts_taboo_list[part_index, self.parts_start[part_index]] = 1
+        self.threads_count = threads_count
 
-    def __choose_edge(self, part_index: int):
-        # available_edges = self.graph[part_index][self.graph[part_index] > 0]
-        available_edges = np.where(np.logical_and((self.parts_taboo_list[part_index] == 0), (self.graph[self.parts[part_index]] > 0)))[0]
-        # print(self.parts_taboo_list[part_index] == 0)
-        # print(self.graph[part_index] > 0)
-        # print(np.logical_and((self.parts_taboo_list[part_index] == 0), (self.graph[part_index] > 0)))
-        # available_edges_summ = np.where((self.parts_taboo_list[part_index] == 0))[0]
-        # available_edges_summ = np.where(np.logical_and((self.parts_taboo_list[part_index] == 0), (self.graph[part_index] > 0)))[0]
+    def __forget(self, route_index: int):
+        self.parts_taboo_list[route_index] = np.zeros((self.dim), dtype=int)
+        self.parts_taboo_list[route_index, self.routes[route_index, 0]] = 1
+        self.next_index[route_index] = 1
+
+    def __choose_edge(self, route_index: int):
+        available_edges = np.where(self.parts_taboo_list[route_index] == 0)[0]
+        # print(available_edges)
         probability = np.zeros_like(available_edges, dtype=float)
         summ = 0
         for edge in available_edges:
-            summ += self.pheromon_level[self.parts[part_index], edge] ** self.alpha * 1/self.graph[self.parts[part_index], edge] ** self.beta
+            summ += self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], edge] ** self.alpha * 1/self.distance(self.graph[self.routes[route_index, self.next_index[route_index]-1], :], self.graph[edge, :]) ** self.beta
         for i, edge in enumerate(available_edges):
-            probability[i] = (self.pheromon_level[self.parts[part_index], edge] ** self.alpha * 1/self.graph[self.parts[part_index], edge] ** self.beta)/summ
+            probability[i] = (self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], edge] ** self.alpha * 1/self.distance(self.graph[self.routes[route_index, self.next_index[route_index]-1], :], self.graph[edge, :]) ** self.beta)/summ
         # print(probability)
         # print(sum(probability))
-        self.parts[part_index] = np.random.choice(available_edges, p=probability)
-        self.parts_best[part_index, self.parts_best_count[part_index]] = self.parts[part_index].copy()
-        self.parts_best_count[part_index] += 1
+        self.routes[route_index, self.next_index[route_index]] = np.random.choice(available_edges, p=probability)
+        self.parts_taboo_list[route_index, self.routes[route_index, self.next_index[route_index]]] = 1
 
-    def __pheromon_update(self, part_index: int):
-        self.pheromon_level[self.parts_best[part_index, self.parts_best_count[part_index]], self.parts[part_index]] = (1 - self.rho) * self.pheromon_level[self.parts_best[part_index, self.parts_best_count[part_index]], self.parts[part_index]] + self.Q/self.graph[self.parts_best[part_index, self.parts_best_count[part_index]], self.parts[part_index]]
-        # self.parts_taboo_list[part_index, self.parts_prev[part_index]] = 1
+    def __pheromon_update(self, route_index: int):
+        # TODO update pheromon for all routes
+        self.delta_pheromon[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] += self.Q/self.fitness(self.routes[route_index, :self.next_index[route_index] + 1], self.graph)
+        # self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] = (1 - self.rho) * self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] + self.Q/self.fitness(self.routes[route_index, :self.next_index[route_index] + 1], self.graph)
+        self.next_index[route_index] += 1
 
     def run(self, **kwargs):
-        for iteration in range(self.iterations):
-            for i in range(self.pop_size):
-                self.__forget(i)
-                # print(self.parts[i])
-                self.__choose_edge(i)
-                # print(self.parts[i])
-                self.__pheromon_update(i)
-                self.compare(i)
-            self.save
-            self.parts_best = np.zeros((self.pop_size, self.dim), dtype=int)
-            self.parts_best[:, 0] = self.parts.copy()
-            self.parts_best_count = np.ones(self.pop_size, dtype=int)
-        #         raise NotImplementedError("Method not implemented")
-        # raise NotImplementedError("Method not implemented")
-        print(self.pheromon_level)
-        self.plot
+        self.lock = threading.Lock()
 
-    def compare(self, part_index: int):
-        if self.best < self.parts_best[part_index, self.parts_best_count[part_index]]:
-            self.best = self.parts_best[part_index, self.parts_best_count[part_index]]
-            self.best_parts = self.parts_best[part_index].copy()
+        self.prerun(**kwargs)
+        for iteration in tqdm(
+            range(self.iterations),
+            desc=f"Processing {self.__class__.__name__}",
+            unit="step",
+            bar_format="{l_bar}{bar:40}{r_bar}",
+            colour='cyan'
+        ):
+            self.delta_pheromon = np.zeros_like(self.pheromon_level)
 
-    @property
-    def save(self):
-        self.history_parts.append(self.parts.copy())
-        self.history_parts_best.append(self.parts_best.copy())
-        self.history_best.append(self.best)
-        self.history_best_parts.append(self.best_parts.copy())
-        # self.history_parts_prev.append(self.parts_prev.copy())
-        self.history_pheromon_level.append(self.pheromon_level.copy())
-        self.history_parts_taboo_list.append(self.parts_taboo_list.copy())
+            # threads = []
+            # size = self.pop_size / self.threads_count
+            # for route_index in range(self.pop_size):
+            #     thread = threading.Thread(target=self.ant_way, args=(route_index,))
+            # for thread_index in range(self.threads_count):
+            #     thread = threading.Thread(target=self.ant_way, args=(np.arange(self.pop_size + thread_index * size, self.pop_size + (thread_index + 1) * size, 1, dtype=int),))
+            #     threads.append(thread)
+            #     thread.start()
 
-    @property
-    def plot(self):
-        plt.imshow(self.graph>0, cmap="binary")
-        plt.plot(self.history_best_parts[0], self.history_best[0])
-        def update(frame):
-            plt.cla()
-            plt.title(f"iteration {frame}")
-            plt.imshow(self.graph>0, cmap="binary")
-            plt.plot(self.history_best_parts[frame], self.history_best[frame])
-        ani = animation.FuncAnimation(plt.gcf(), update, frames=self.iterations, interval=1000)
-        plt.show()
+            # for thread in threads:
+            #     thread.join()
+
+            # pool = concurrent.futures.ThreadPoolExecutor(self.pop_size)
+            # for route_index in range(self.pop_size):
+            #     pool.submit(self.ant_way, route_index)
+            # pool.shutdown(wait=True)
+            
+            # with Pool() as pool:
+            #     pool.map(self.ant_way, self.pop_size)
+            # pool2 = Pool(self.pop_size).map(self.ant_way, range(self.pop_size))
+            # pool2.
+            self.ant_way(np.arange(self.pop_size))
+            self.pheromon_level = (1 - self.rho) * self.pheromon_level + self.delta_pheromon
+            self.save(iteration)
+
+        print(self.fitness(self.best_routes, self.graph))
+        # print(self.pheromon_level)
+        return self.postrun
+
+    # def ant_way(self, route_index: int):
+    def ant_way(self, route_indexes: np.ndarray):
+        for route_index in route_indexes:
+            self.__forget(route_index)
+            for _ in range(1, self.dim):
+                self.__choose_edge(route_index)
+                self.__pheromon_update(route_index)
+            fitness = self.fitness(self.routes[route_index, :], self.graph)
+            if self.best_f > fitness:
+                self.best_f = fitness
+                self.best_routes = self.routes[route_index, :].astype(int)
+
+    # def save(self, iteration: int):
+    #     super().save(iteration)
+    #     self.history_pheromon_level.append(self.pheromon_level.copy())
+    #     self.history_parts_taboo_list.append(self.parts_taboo_list.copy())
 
 
 if __name__ == "__main__":
-    # graph = np.array([
-    #     [0, 1, 1, 0],
-    #     [1, 0, 1, 0],
-    #     [1, 1, 0, 1],
-    #     [0, 0, 1, 0]
-    # ])
-    # ar = AntRoute(10, 10, .5, .5, .5, graph)
-    graph = {0: [(1, 10), (3, 5)], 1: [(0, 10), (2, 5)], 2: [(1, 5), (3, 10)], 3: [(0, 5), (2, 10)]}
-    # graph = {"A": [(1, 10), (3, 5)], 1: [("A", 10), (2, 5)], 2: [(1, 5), (3, 10)], 3: [("A", 5), (2, 10)]}
-    ar = AntRoute(10, 10, .5, .5, .5, graph).run()
+    # graph = {0: [(1, 10), (3, 5)], 1: [(0, 10), (2, 5)], 2: [(1, 5), (3, 10)], 3: [(0, 5), (2, 10)]}
+    ar = AntRoute(20, 100, 0.6,  0.9,  0.3, 28.).run(show_plot_animation=True, every=1)  # , graph
+
 # import numpy as np
 # import matplotlib.pyplot as plt
 # import matplotlib.animation as animation
