@@ -39,6 +39,6 @@ if __name__ == "__main__":
     # for j in range(N+1):
     #     plt.plot(a[(j+0)*b:(j+1)*b, 0], a[(j+0)*b:(j+1)*b, 1])
     # plt.plot(a[:b, 0], a[:b, 1], "o")
-    print(a[0, :])
+    print(a[:, :2])
     # plt.show()
     print(np.sum(Circle(5, plot=True)[:, 2]))

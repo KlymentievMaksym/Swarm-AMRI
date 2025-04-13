@@ -41,6 +41,11 @@ class AlgoritmRoute:
                 self.graph = Circle(self.pop_size)[:, :2]
                 self.dim = self.graph.shape[0]
 
+        self.dist = np.zeros((self.dim, self.dim))
+        for i in range(self.dim):
+            for j in range(self.dim):
+                self.dist[i][j] = self.distance(self.graph[i], self.graph[j])
+
         self.best_f = float('inf')
         self.best_routes = None
 
@@ -50,7 +55,7 @@ class AlgoritmRoute:
         self.kwargs = kwargs
 
     def distance(self, a: np.ndarray, b: np.ndarray):
-        return np.sqrt((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2)
+        return np.sqrt(np.sum((b - a) ** 2))
 
     # @property
     def save(self, iteration: int):

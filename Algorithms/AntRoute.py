@@ -33,11 +33,11 @@ class AntRoute(AlgoritmRoute):
         self.routes = np.zeros((self.pop_size, self.dim), dtype=int)
         self.routes[:, 0] = np.random.randint(0, self.dim, self.pop_size)
         self.pheromon_level = np.zeros((self.dim, self.dim)) + 1e-6
-        self.parts_taboo_list = np.zeros((self.pop_size, self.dim), dtype=int)
+        self.pheromon_level_before = self.pheromon_level.copy()
+        # self.parts_taboo_list = np.zeros((self.pop_size, self.dim), dtype=int)
         # for route_index in range(self.pop_size):
         #     self.parts_taboo_list[route_index, self.routes[route_index, 0]] = 1
 
-        self.next_index = np.ones(self.pop_size, dtype=int)
         # print(self.routes)
         # print(self.parts_taboo_list)
 
@@ -69,9 +69,12 @@ class AntRoute(AlgoritmRoute):
         # TODO update pheromon for all routes
         pheromon_to_add = self.Q/self.fitness(self.routes[route_index, :self.next_index[route_index] + 1], self.graph)
 
-        self.delta_pheromon[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] += pheromon_to_add
-        self.delta_pheromon[self.routes[route_index, self.next_index[route_index]], self.routes[route_index, self.next_index[route_index]-1]] += pheromon_to_add
-        # self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] = (1 - self.rho) * self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] + self.Q/self.fitness(self.routes[route_index, :self.next_index[route_index] + 1], self.graph)
+        # self.delta_pheromon[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] += pheromon_to_add
+        # self.delta_pheromon[self.routes[route_index, self.next_index[route_index]], self.routes[route_index, self.next_index[route_index]-1]] += pheromon_to_add
+
+        self.pheromon_level[self.routes[route_index, self.next_index[route_index]-1], self.routes[route_index, self.next_index[route_index]]] += pheromon_to_add
+        self.pheromon_level[self.routes[route_index, self.next_index[route_index]], self.routes[route_index, self.next_index[route_index]-1]] += pheromon_to_add
+
         self.next_index[route_index] += 1
 
     def run(self, **kwargs):
@@ -85,7 +88,7 @@ class AntRoute(AlgoritmRoute):
             bar_format="{l_bar}{bar:40}{r_bar}",
             colour='cyan'
         ):
-            self.delta_pheromon = np.zeros_like(self.pheromon_level)
+
 
             # threads = []
             # size = self.pop_size / self.threads_count
@@ -108,8 +111,57 @@ class AntRoute(AlgoritmRoute):
             #     pool.map(self.ant_way, self.pop_size)
             # pool2 = Pool(self.pop_size).map(self.ant_way, range(self.pop_size))
             # pool2.
-            self.ant_way(np.arange(self.pop_size))
-            self.pheromon_level = (1 - self.rho) * self.pheromon_level + self.delta_pheromon
+            # self.ant_way(np.arange(self.pop_size))
+
+            self.delta_pheromon = np.zeros_like(self.pheromon_level)
+            self.next_index = np.ones(self.pop_size, dtype=int)
+            self.distances = np.zeros(self.pop_size)
+            self.parts_taboo_list = np.zeros((self.pop_size, self.dim), dtype=int)
+            for route_index in range(self.pop_size):
+                self.parts_taboo_list[route_index, self.routes[route_index, 0]] = 1
+
+            for ant in range(self.pop_size):
+                for _ in range(self.dim-1):
+                    available_edges = np.where(self.parts_taboo_list[ant] == 0)[0]
+                    # print(available_edges)
+                    probability = np.zeros_like(available_edges, dtype=float)
+                    # print(probability)
+                    for i, edge in enumerate(available_edges):
+                        probability[i] = (self.pheromon_level[self.routes[ant, self.next_index[ant]-1], edge] ** self.alpha * (1/self.dist[self.routes[ant, self.next_index[ant]-1], edge]) ** self.beta)
+                    summ = sum(probability)
+                    probability /= summ
+                    # print(probability)
+                    self.routes[ant, self.next_index[ant]] = np.random.choice(available_edges, p=probability)
+                    self.parts_taboo_list[ant, self.routes[ant, self.next_index[ant]]] = 1
+
+                    route_from, route_to = self.routes[ant, self.next_index[ant]-1], self.routes[ant, self.next_index[ant]]
+                    pheromon_to_add = self.Q/self.fitness(self.routes[ant, :self.next_index[ant] + 1], self.graph)
+
+                    self.delta_pheromon[route_from, route_to] += pheromon_to_add
+                    self.delta_pheromon[route_to, route_from] += pheromon_to_add
+
+                    self.pheromon_level[route_from, route_to] += pheromon_to_add
+                    self.pheromon_level[route_to, route_from] += pheromon_to_add
+
+                    self.next_index[ant] += 1
+                self.distances[ant] = self.fitness(self.routes[ant, :], self.graph)
+                # self.distances[ant] = sum(self.dist[self.routes[ant, i]][self.routes[ant, (i + 1) % self.dim]] for i in range(self.dim))
+
+                if self.best_f > self.distances[ant]:
+                    self.best_f = self.distances[ant]
+                    self.best_routes = self.routes[ant, :].copy()
+
+            # if self.best_f > 6.1804:
+            #     print(self.best_f)
+            #     print(self.best_routes)
+            #     print(self.routes)
+            #     print(self.distances)
+
+            self.pheromon_level = (1 - self.rho) * self.pheromon_level_before + self.delta_pheromon
+            self.pheromon_level_before = self.pheromon_level.copy()
+
+            self.routes[:, 0] = np.random.randint(0, self.dim, self.pop_size)
+            # self.routes[:, 0] = self.routes[:, -1]
             self.save(iteration)
 
         print(self.fitness(self.best_routes, self.graph))
@@ -135,7 +187,32 @@ class AntRoute(AlgoritmRoute):
 
 
 if __name__ == "__main__":
-    # graph = {0: [(1, 10), (3, 5)], 1: [(0, 10), (2, 5)], 2: [(1, 5), (3, 10)], 3: [(0, 5), (2, 10)]}
+    # routes = np.array([
+    #     [0, 9, 6, 7, 4, 5, 2, 8, 3, 1],
+    #     [2, 5, 4, 7, 6, 9, 0, 1, 3, 8],
+    #     [5, 2, 8, 3, 1, 0, 9, 6, 7, 4],
+    #     [5, 4, 7, 6, 9, 0, 1, 3, 8, 2],
+    #     [7, 4, 5, 2, 8, 3, 1, 0, 9, 6],
+    #     [0, 9, 6, 7, 4, 5, 2, 8, 3, 1],
+    #     [4, 7, 6, 9, 0, 1, 3, 8, 2, 5],
+    #     [6, 9, 0, 1, 3, 8, 2, 5, 4, 7],
+    #     [0, 9, 6, 7, 4, 5, 2, 8, 3, 1],
+    #     [3, 1, 0, 9, 6, 7, 4, 5, 2, 8]
+    # ], dtype=int)
+    # graph = np.array([
+    #     [ 1.00000000e+00,  0.00000000e+00],
+    #     [ 8.09016994e-01,  5.87785252e-01],
+    #     [ 3.09016994e-01,  9.51056516e-01],
+    #     [-3.09016994e-01,  9.51056516e-01],
+    #     [-8.09016994e-01,  5.87785252e-01],
+    #     [-1.00000000e+00,  1.22464680e-16],
+    #     [-8.09016994e-01, -5.87785252e-01],
+    #     [-3.09016994e-01, -9.51056516e-01],
+    #     [ 3.09016994e-01, -9.51056516e-01],
+    #     [ 8.09016994e-01, -5.87785252e-01]
+    # ], dtype=float)
+    # for route in routes:
+    #     print(AntRoute.fitness(AntRoute, route, graph))
     ar = AntRoute(10, 100, 0.5,  0.5,  0.5, 100).run(show_plot_animation=True, every=1)  # , graph
 
 # import numpy as np
