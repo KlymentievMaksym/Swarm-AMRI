@@ -1,13 +1,14 @@
 import numpy as np
+import random as rng
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 
-import threading
-import numba as nb
-import concurrent.futures
-from multiprocessing import Pool
+# import threading
+# import numba as nb
+# import concurrent.futures
+# from multiprocessing import Pool
 
 if __name__ == "__main__" or __name__ == "__mp_main__":
     from AlgoritmRoute import AlgoritmRoute
@@ -78,16 +79,16 @@ class AntRoute(AlgoritmRoute):
         self.next_index[route_index] += 1
 
     def run(self, **kwargs):
-        self.lock = threading.Lock()
+        # self.lock = threading.Lock()
 
         self.prerun(**kwargs)
-        for iteration in tqdm(
-            range(self.iterations),
-            desc=f"Processing {self.__class__.__name__}",
-            unit="step",
-            bar_format="{l_bar}{bar:40}{r_bar}",
-            colour='cyan'
-        ):
+        # for iteration in tqdm(
+        #     range(self.iterations),
+        #     desc=f"Processing {self.__class__.__name__}",
+        #     unit="step",
+        #     bar_format="{l_bar}{bar:40}{r_bar}",
+        #     colour='cyan'
+        # ):
 
 
             # threads = []
@@ -113,58 +114,76 @@ class AntRoute(AlgoritmRoute):
             # pool2.
             # self.ant_way(np.arange(self.pop_size))
 
-            self.delta_pheromon = np.zeros_like(self.pheromon_level)
-            self.next_index = np.ones(self.pop_size, dtype=int)
-            self.distances = np.zeros(self.pop_size)
-            self.parts_taboo_list = np.zeros((self.pop_size, self.dim), dtype=int)
-            for route_index in range(self.pop_size):
-                self.parts_taboo_list[route_index, self.routes[route_index, 0]] = 1
+            # self.delta_pheromon = np.zeros_like(self.pheromon_level)
+            # self.next_index = np.ones(self.pop_size, dtype=int)
+            # self.distances = np.zeros(self.pop_size)
+            # self.parts_taboo_list = np.zeros((self.pop_size, self.dim), dtype=int)
+            # for route_index in range(self.pop_size):
+            #     self.parts_taboo_list[route_index, self.routes[route_index, 0]] = 1
+        cities = self.graph
+        n = len(cities)
+        dist = np.zeros((n, n))
+        for i in range(n):
+            for j in range(n):
+                dist[i][j] = np.linalg.norm(np.array(cities[i]) - np.array(cities[j]))
+        pheromone = np.ones((n, n)) / n
+        best_distance = float("inf")
+        best_tour = []
+
+        for iteration in tqdm(
+            range(self.iterations),
+            desc="Processing",
+            unit="step",
+            bar_format="{l_bar}{bar:40}{r_bar}",
+            colour='cyan'
+        ):
+            all_tours = []
+            all_distances = []
 
             for ant in range(self.pop_size):
-                for _ in range(self.dim-1):
-                    available_edges = np.where(self.parts_taboo_list[ant] == 0)[0]
-                    # print(available_edges)
-                    probability = np.zeros_like(available_edges, dtype=float)
-                    # print(probability)
-                    for i, edge in enumerate(available_edges):
-                        probability[i] = (self.pheromon_level[self.routes[ant, self.next_index[ant]-1], edge] ** self.alpha * (1/self.dist[self.routes[ant, self.next_index[ant]-1], edge]) ** self.beta)
-                    summ = sum(probability)
-                    probability /= summ
-                    # print(probability)
-                    self.routes[ant, self.next_index[ant]] = np.random.choice(available_edges, p=probability)
-                    self.parts_taboo_list[ant, self.routes[ant, self.next_index[ant]]] = 1
+                tour = [rng.randint(0, n - 1)]
+                while len(tour) < n:
+                    i = tour[-1]
+                    probs = []
+                    for j in range(n):
+                        if j not in tour:
+                            tau = pheromone[i][j] ** self.alpha
+                            eta = (1 / dist[i][j]) ** self.beta
+                            probs.append((j, tau * eta))
+                    total = sum(p[1] for p in probs)
+                    probs = [(city, p / total) for city, p in probs]
+                    r = rng.random()
+                    cumulative = 0.0
+                    for city, p in probs:
+                        cumulative += p
+                        if r <= cumulative:
+                            tour.append(city)
+                            break
 
-                    route_from, route_to = self.routes[ant, self.next_index[ant]-1], self.routes[ant, self.next_index[ant]]
-                    pheromon_to_add = self.Q/self.fitness(self.routes[ant, :self.next_index[ant] + 1], self.graph)
+                tour_distance = sum(dist[tour[i]][tour[(i + 1) % n]] for i in range(n))
+                if tour_distance < best_distance:
+                    best_distance = tour_distance
+                    best_tour = tour
+                all_tours.append(tour)
+                all_distances.append(tour_distance)
 
-                    self.delta_pheromon[route_from, route_to] += pheromon_to_add
-                    self.delta_pheromon[route_to, route_from] += pheromon_to_add
+            # Випаровування феромону
+            pheromone *= (1 - self.rho)
 
-                    self.pheromon_level[route_from, route_to] += pheromon_to_add
-                    self.pheromon_level[route_to, route_from] += pheromon_to_add
+            # Додавання нового феромону
+            for tour, d in zip(all_tours, all_distances):
+                for i in range(n):
+                    a = tour[i]
+                    b = tour[(i + 1) % n]
+                    pheromone[a][b] += self.Q / d
+                    pheromone[b][a] += self.Q / d
 
-                    self.next_index[ant] += 1
-                self.distances[ant] = self.fitness(self.routes[ant, :], self.graph)
-                # self.distances[ant] = sum(self.dist[self.routes[ant, i]][self.routes[ant, (i + 1) % self.dim]] for i in range(self.dim))
-
-                if self.best_f > self.distances[ant]:
-                    self.best_f = self.distances[ant]
-                    self.best_routes = self.routes[ant, :].copy()
-
-            # if self.best_f > 6.1804:
-            #     print(self.best_f)
-            #     print(self.best_routes)
-            #     print(self.routes)
-            #     print(self.distances)
-
-            self.pheromon_level = (1 - self.rho) * self.pheromon_level_before + self.delta_pheromon
-            self.pheromon_level_before = self.pheromon_level.copy()
-
-            self.routes[:, 0] = np.random.randint(0, self.dim, self.pop_size)
-            # self.routes[:, 0] = self.routes[:, -1]
-            self.save(iteration)
-
-        print(self.fitness(self.best_routes, self.graph))
+            self.history_best_f[iteration] = best_distance
+            self.history_best_routes[iteration] = best_tour
+            # self.save(iteration)
+        self.best_f = best_distance
+        self.best_routes = best_tour
+        print(self.best_f)
         # print(self.pheromon_level)
         return self.postrun
 

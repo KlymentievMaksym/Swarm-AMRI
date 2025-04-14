@@ -1,4 +1,4 @@
-from Algorithms.Bat import Bat
+from Algorithms.Functions.Bat import Bat
 from Algorithms.Cuckoo import Cuckoo
 
 import numpy as np

@@ -44,8 +44,8 @@ class AlgoritmRoute:
         self.dist = np.zeros((self.dim, self.dim))
         for i in range(self.dim):
             for j in range(self.dim):
-                self.dist[i][j] = self.distance(self.graph[i], self.graph[j])
-
+                # self.dist[i][j] = self.distance(self.graph[i], self.graph[j])
+                self.dist[i][j] = np.linalg.norm(self.graph[i] - self.graph[j])
         self.best_f = float('inf')
         self.best_routes = None
 

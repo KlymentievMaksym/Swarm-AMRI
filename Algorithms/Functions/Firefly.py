@@ -3,9 +3,9 @@ import numba as nb
 import numpy as np
 
 if __name__ == "__main__":
-    from Algoritm import Algorithm
+    from Algorithms.Functions.Algoritm import Algorithm
 else:
-    from .Algoritm import Algorithm
+    from .Functions.Algoritm import Algorithm
 
 
 class FF(Algorithm):

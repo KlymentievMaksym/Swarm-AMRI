@@ -1,6 +1,8 @@
 import numpy as np
-import random
-from Algorithms.Circle import Circle
+import random as rng
+print(__name__)
+if __name__ == "__main__" or __name__ == "AntTSP":
+    from Circle import Circle
 from os import listdir
 from tqdm import tqdm
 
@@ -30,7 +32,7 @@ def distance_matrix(cities):
             dist[i][j] = np.linalg.norm(np.array(cities[i]) - np.array(cities[j]))
     return dist
 
-def ant_colony_tsp(cities, n_ants=10, n_iterations=100, alpha=1, beta=5, rho=0.5, Q=100):
+def AntTSP(cities, n_ants=10, n_iterations=100, alpha=1, beta=5, rho=0.5, Q=100):
     n = len(cities)
     dist = distance_matrix(cities)
     pheromone = np.ones((n, n)) / n
@@ -42,13 +44,14 @@ def ant_colony_tsp(cities, n_ants=10, n_iterations=100, alpha=1, beta=5, rho=0.5
         desc="Processing",
         unit="step",
         bar_format="{l_bar}{bar:40}{r_bar}",
-        colour='cyan'
+        colour='cyan',
+        leave=False
     ):
         all_tours = []
         all_distances = []
 
         for ant in range(n_ants):
-            tour = [random.randint(0, n - 1)]
+            tour = [rng.randint(0, n - 1)]
             while len(tour) < n:
                 i = tour[-1]
                 probs = []
@@ -59,7 +62,7 @@ def ant_colony_tsp(cities, n_ants=10, n_iterations=100, alpha=1, beta=5, rho=0.5
                         probs.append((j, tau * eta))
                 total = sum(p[1] for p in probs)
                 probs = [(city, p / total) for city, p in probs]
-                r = random.random()
+                r = rng.random()
                 cumulative = 0.0
                 for city, p in probs:
                     cumulative += p
@@ -85,23 +88,40 @@ def ant_colony_tsp(cities, n_ants=10, n_iterations=100, alpha=1, beta=5, rho=0.5
                 pheromone[a][b] += Q / d
                 pheromone[b][a] += Q / d
 
+    print(best_distance)
     return best_tour, best_distance
 
-# cities = [(random.uniform(0, 100), random.uniform(0, 100)) for _ in range(20)]
-cities = Circle(10)[:, :2]
-# cities = datas[0][:, 1:]
-best_path, best_dist = ant_colony_tsp(cities)
-print("Best tour:", best_path)
-print("Best distance:", best_dist)
 
-# import matplotlib.pyplot as plt
+if __name__ == "__main__":
+    # cities = [(random.uniform(0, 100), random.uniform(0, 100)) for _ in range(20)]
+    cities = Circle(10)[:, :2]
+    cities = datas[0][:, 1:]
+    repeat_times = 1
+    best = []
+    for iteration in tqdm(
+        range(repeat_times),
+        desc="Processing",
+        unit="step",
+        bar_format="{l_bar}{bar:40}{r_bar}",
+        colour='cyan'
+    ):
+        best_path, best_dist = AntTSP(cities)
+        best.append(best_dist)
+        # print("Best tour:", best_path)
+        # print("Best distance:", best_dist)
+    print(np.mean(best), np.max(best), np.min(best))
 
-# x = [city[0] for city in cities]
-# y = [city[1] for city in cities]
-# plt.scatter(x, y)
+    # import matplotlib.pyplot as plt
 
-# for i in range(len(best_path)):
-#     j = (i + 1) % len(best_path)
-#     plt.plot([cities[best_path[i]][0], cities[best_path[j]][0]], [cities[best_path[i]][1], cities[best_path[j]][1]], 'r-')
+    # plt.title(f"best fit {best_dist:.4f}")
+    # plt.grid()
+    # x = cities[best_path, 0]
+    # x = np.append(x, x[0])
+    # y = cities[best_path, 1]
+    # y = np.append(y, y[0])
+    # plt.plot(x, y, 'm')
+    # plt.plot(x, y, 'r.', markersize=15)
+    # plt.xlabel("x")
+    # plt.ylabel("y")
 
-# plt.show()
+    # plt.show()
