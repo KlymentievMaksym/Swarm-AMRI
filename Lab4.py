@@ -1,7 +1,7 @@
 import numpy as np
 from os import listdir
 
-from Algorithms.TSP.GeneticRoute import GeneticRoute
+from Algorithms.Depreceated.GeneticRoute import GeneticRoute
 # from Algorithms.AntRoute import AntRoute
 # from Algorithms.Depreceated.AntTSP import AntTSP
 from Algorithms.TSP.AntTSP import AntTSP

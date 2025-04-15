@@ -11,8 +11,8 @@ from multiprocessing import Pool
 
 # print(__name__)
 if __name__ == "__main__" or __name__ == "__mp_main__":
-    from AlgoritmRoute import AlgoritmRoute
-    from AlgoritmRoute import tqdm
+    from Algorithms.Depreceated.AlgoritmRoute import AlgoritmRoute
+    from Algorithms.Depreceated.AlgoritmRoute import tqdm
     # from Circle import Circle
 else:
     from .AlgoritmRoute import AlgoritmRoute

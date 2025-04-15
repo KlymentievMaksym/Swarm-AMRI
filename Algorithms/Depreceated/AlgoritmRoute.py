@@ -10,7 +10,7 @@ import numba as nb
 if __name__ == "__main__" or __name__ == "AlgoritmRoute":
     from Circle import Circle
 else:
-    from .Circle import Circle
+    from ..TSP.Circle import Circle
 
 
 class AlgoritmRoute:

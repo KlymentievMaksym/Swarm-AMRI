@@ -63,6 +63,18 @@
     "cmath": "cpp",
     "deque": "cpp",
     "vector": "cpp",
-    "iterator": "cpp"
+    "iterator": "cpp",
+    "array": "cpp",
+    "string_view": "cpp",
+    "initializer_list": "cpp",
+    "ranges": "cpp",
+    "span": "cpp",
+    "valarray": "cpp",
+    "forward_list": "cpp",
+    "string": "cpp",
+    "unordered_map": "cpp",
+    "unordered_set": "cpp",
+    "stdexcept": "cpp",
+    "ostream": "cpp"
   }
 }
