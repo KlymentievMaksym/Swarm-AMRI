@@ -75,6 +75,7 @@
     "unordered_map": "cpp",
     "unordered_set": "cpp",
     "stdexcept": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "iostream": "cpp"
   }
 }

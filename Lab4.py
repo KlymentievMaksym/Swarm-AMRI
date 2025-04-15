@@ -1,10 +1,12 @@
 import numpy as np
 from os import listdir
 
-from Algorithms.Depreceated.GeneticRoute import GeneticRoute
+# from Algorithms.Depreceated.GeneticRoute import GeneticRoute
 # from Algorithms.AntRoute import AntRoute
 # from Algorithms.Depreceated.AntTSP import AntTSP
 from Algorithms.TSP.AntTSP import AntTSP
+from Algorithms.TSP.GenTSP import GenTSP
+
 
 # print(listdir("./Lab4/Data"))
 for path in listdir("./Lab4/Data"):
@@ -24,7 +26,8 @@ for path in listdir("./Lab4/Data"):
     data = np.array([list(map(int, part.split(" "))) for part in data])
 
     # GeneticRoute(100, 100, 500, 0.5, data[:, 1:]).run(show_plot_animation=False)  # , save_plot=f"./Lab4/Images/an.{path}.png", save_convergence=f"./Lab4/Images/conv.{path}.png")  #, save_plot="./Lab4/Images/an.3.png", save_convergence="./Lab4/Images/conv.3.png"
-    AntTSP(data[:, 1:], 10, 100, 5, 5, 0.5, 100)
+    GenTSP(data[:, 1:], 100, 1000, 2000, 0.5, every=10, show_plot_animation=True, save_plot=f"./Lab4/Images/GenTSP_{path}.gif", save_convergence=f"./Lab4/Images/GenTSP_{path}.png", show_plot=False, show_convergence=False)
+    AntTSP(data[:, 1:], 100, 1000, 1, 1, 0.5, 100, every=10, show_plot_animation=True, save_plot=f"./Lab4/Images/AntTSP_{path}.gif", save_convergence=f"./Lab4/Images/GenTSP_{path}.png", show_plot=False, show_convergence=False)
     # AntRoute(100, 100, 0.5, 0.5, 0.5, 280, data[:, 1:]).run(show_plot=True, show_plot_animation=False, show_convergence=True)  # , save_plot=f"./Lab4/Images/an.{path}.png", save_convergence=f"./Lab4/Images/conv.{path}.png")  #, save_plot="./Lab4/Images/an.3.png", save_convergence="./Lab4/Images/conv.3.png"
 
 # from Algorithms.AntRoute import AntRoute

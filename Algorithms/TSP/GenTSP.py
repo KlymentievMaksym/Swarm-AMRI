@@ -34,6 +34,7 @@ else:
 
 def GenTSP(cities, pop_size=10, iterations=100, child_size=20, mutation_probability=0.5, **kwargs):
     info = kwargs.get("info", False)
+    plot = kwargs.get("plot", True)
     if info:
         print("[GenTSP] Started...")
     request = {
@@ -84,9 +85,17 @@ def GenTSP(cities, pop_size=10, iterations=100, child_size=20, mutation_probabil
     ):
         line = line.rstrip('\n')  # Remove trailing newline
         response = json.loads(line)
-        best_distance.append(response["best_distance"])
-        best_route.append(response["best_route"])
-        # print("Message:", response["Message"])
+        try:
+            best_distance.append(response["best_distance"])
+            best_route.append(response["best_route"])
+        except Exception as e:
+            # print(e)
+            pass
+        try:
+            print("Message:", response["Message"])
+        except Exception as e:
+            # print(e)
+            pass
         # print("Best distance:", response["best_distance"])
         # print("Best route:", response["best_route"])
         # print(f"Received line: {line}")  # Process each line here
@@ -98,13 +107,18 @@ def GenTSP(cities, pop_size=10, iterations=100, child_size=20, mutation_probabil
 
     if info:
         print("[GenTSP] Done!")
-    Plot().plotTSP(best_distance, best_route, cities, **kwargs)
+    if plot:
+        Plot().plotTSP(best_distance, best_route, cities, **kwargs)
+    print("[GenTSP] Distance:", best_distance[-1])
+    return best_distance, best_route
 
 
 if __name__ == "__main__":
-    pop_size = 50
+    pop_size = 10
     iterations = 100
-    child_size = 50
+    child_size = 20
     prob = 0.5
     cities = Circle(10)[:, :2]
-    atcp = GenTSP(cities, pop_size, iterations, child_size, prob, show_plot_animation=True, every=1, interval=100, info=True)
+    # atcp = GenTSP(cities, pop_size, iterations, child_size, prob, show_plot_animation=True, every=1, interval=100, info=True, plot=False)
+    atcp = GenTSP(cities, pop_size, iterations, child_size, prob, show_plot_animation=True, every=1, interval=100, info=False, plot=True)
+    # print(atcp)

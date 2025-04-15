@@ -74,21 +74,6 @@ public:
         return Result;
     }
 
-    // vector<int> unique_keep_order(const vector<int>& input)
-    // {
-    //     unordered_set<int> seen;
-    //     vector<int> result;
-    //     for (int num : input)
-    //     {
-    //         if (seen.find(num) == seen.end())
-    //         {
-    //             seen.insert(num);
-    //             result.push_back(num);
-    //         }
-    //     }
-    //     return result;
-    // }
-
     Gene Crossover(Gene Parent1, Gene Parent2)
     {
         random_device rd;
@@ -96,11 +81,33 @@ public:
         uniform_int_distribution<> dis(1, Parent1.path.size());
         int cross = dis(gen);
 
+        // json update;
+        // update["Message"] = "Prepare for Parents cross";
+        // cout << update.dump() << endl;
+        // cout.flush();
+
+        // update["Message"] = Parent1.path.size();
+        // cout << update.dump() << endl;
+        // cout.flush();
+        // update["Message"] = cross;
+        // cout << update.dump() << endl;
+        // cout.flush();
+        // update["Message"] = Parent2.path.size();
+        // cout << update.dump() << endl;
+        // cout.flush();
+        // update["Message"] = cross;
+        // cout << update.dump() << endl;
+        // cout.flush();
+
         vector<int> P1S1(Parent1.path.begin(), Parent1.path.begin() + cross);
         vector<int> P2S2(Parent2.path.begin() + cross, Parent2.path.end());
 
         vector<int> P2S1(Parent2.path.begin(), Parent2.path.begin() + cross);
         vector<int> P1S2(Parent1.path.begin() + cross, Parent1.path.end());
+
+        // update["Message"] = "Prepare for Connecting";
+        // cout << update.dump() << endl;
+        // cout.flush();
 
         vector<int> path;
         path.reserve(P1S1.size() + P2S2.size() + P2S1.size() + P1S2.size());
@@ -109,239 +116,110 @@ public:
         path.insert(path.end(), P2S1.begin(), P2S1.end());
         path.insert(path.end(), P1S2.begin(), P1S2.end());
 
+        // update["Message"] = "Generate Child";
+        // cout << update.dump() << endl;
+        // cout.flush();
+
         Gene Child(CitiesNum, true);
         Child.path = unique_unsorted(path);
 
         return Child;
     }
 
-    // Gene Crossover(Gene Parent1, Gene Parent2)
-    // {
-    //     random_device rd;
-    //     mt19937 gen(rd());
-    //     uniform_int_distribution<> dis(1, Parent1.path.size() - 1); // Correct bounds
-    //     int cross = dis(gen);
-    
-    //     vector<int> P1S1(Parent1.path.begin(), Parent1.path.begin() + cross);
-    //     vector<int> P2S2(Parent2.path.begin() + cross, Parent2.path.end());
-    //     vector<int> P2S1(Parent2.path.begin(), Parent2.path.begin() + cross);
-    //     vector<int> P1S2(Parent1.path.begin() + cross, Parent1.path.end());
-    
-    //     vector<int> combined;
-    //     combined.reserve(Parent1.path.size() * 2);
-    //     combined.insert(combined.end(), P1S1.begin(), P1S1.end());
-    //     combined.insert(combined.end(), P2S2.begin(), P2S2.end());
-    //     combined.insert(combined.end(), P2S1.begin(), P2S1.end());
-    //     combined.insert(combined.end(), P1S2.begin(), P1S2.end());
-    
-    //     Gene Child(Parent1.path.size(), true);
-    //     Child.path = unique_keep_order(combined);
-        
-    //     return Child;
-    // }
-
-    vector<int> InvertVector(const vector<int>& a)
-    {
-        return vector<int>(a.rbegin(), a.rend());
-    }
-
-    void modifySlice(vector<int>& vec, size_t start, size_t end, vector<int>& newVec)
-    {
-        if (start >= vec.size() || end > vec.size() || start > end || vec.size() != newVec.size()) return;
-        for (int i = start; i < end; i++)
-        {
-            fill(vec.begin() + start, vec.begin() + end, newVec[i - start]);
-        }
-    }
-
-    // void Mutation(Gene& Child)
-    // {
-    //     random_device rd;
-    //     mt19937 gen(rd());
-    //     uniform_int_distribution<> disI(0, Child.path.size());
-    //     int i = disI(gen);
-    //     int j = disI(gen);
-    //     while (i == j)
-    //     {
-    //         j = disI(gen);
-    //     }
-    //     if (i > j)
-    //     {
-    //         int temp = i;
-    //         i = j;
-    //         j = i;
-    //     }
-    //     uniform_real_distribution<> dis(0.0, 1.0);
-    //     if (dis(gen) < 0.5)
-    //     {
-    //         int temp = Child.path[i];
-    //         Child.path[i] = Child.path[j];
-    //         Child.path[j] = temp;
-    //     }
-    //     else
-    //     {
-    //         vector<int> Invert = InvertVector(Child.path);
-    //         vector<int> path(Invert.begin() + i, Invert.begin() + j);
-    //         modifySlice(Child.path, i, j, path);
-    //     }
-        
-    // }
-
     void Mutation(Gene& Child)
     {
-        if (Child.path.empty()) return;
+        // json update;
+        // update["Message"] = "Prepare for RANDOM";
+        // cout << update.dump() << endl;
+        // cout.flush();
+        // if (Child.path.empty()) return;
     
         random_device rd;
         mt19937 gen(rd());
         int n = Child.path.size();
         
-        // Generate indices between 0 and n-1
         uniform_int_distribution<> dis(0, n - 1);
+        
+        // update["Message"] = "Prepare for I and J";
+        // cout << update.dump() << endl;
+        // cout.flush();
+
         int i = dis(gen);
         int j = dis(gen);
-    
-        // Ensure distinct indices
-        while (i == j) {
+
+        // update["Message"] = "Prepare Check I == J";
+        // cout << update.dump() << endl;
+        // cout.flush();
+
+        while (i == j && n > 2) {
             j = dis(gen);
         }
-    
-        // Ensure i < j
+        // update["Message"] = "Prepare for Mutation SWAP";
+        // cout << update.dump() << endl;
+        // cout.flush();
         if (i > j) {
             swap(i, j);
         }
     
+        // update["Message"] = "Prepare for Mutation MAIN";
+        // cout << update.dump() << endl;
+        // cout.flush();
+
         uniform_real_distribution<> prob(0.0, 1.0);
         if (prob(gen) < 0.5) {
-            // Swap mutation
             swap(Child.path[i], Child.path[j]);
         } else {
-            // Reverse subroute mutation
             reverse(Child.path.begin() + i, Child.path.begin() + j);
         }
+        // update["Message"] = "Ended Mutation MAIN";
+        // cout << update.dump() << endl;
+        // cout.flush();
     }
 
-    vector<vector<double>> SelectCities(const vector<int>& path, const vector<vector<double>>& Cities)
+    double Fitness(vector<int> path, const vector<vector<double>>& Cities)
     {
-        vector<vector<double>> selected;
-        selected.reserve(path.size());
-        
-        for (int index : path)
-        {
-            if (index >= 0 && index < Cities.size())
-            {
-                selected.push_back(Cities[index]);
-            }
-        }
-        
-        return selected;
-    }
-
-    vector<double> PowVector(const vector<double>& a, double PowNumber=1)
-    {
-        vector<double> result;
-        result.reserve(a.size());
-        
-        for (size_t i = 0; i < a.size(); ++i)
-        {
-            result.push_back(pow(a[i], PowNumber));
-        }
-        
-        return result;
-    }
-
-    vector<vector<double>> SplitVectorCol(const vector<vector<double>>& a)
-    {
-        int SplitCount = a[0].size();
-        vector<vector<double>> result;
-        for (size_t i = 0; i < a[0].size(); ++i)
-        {
-            vector<double> result_small;
-            
-            for (size_t j = 0; j < a.size(); ++j)
-            {
-                result_small.push_back(a[j][i]);
-            }
-            result.push_back(result_small);
-        }
-        
-        return result;
-    }
-
-    vector<double> AddVectors(const vector<double>& a, const vector<double>& b, double PowNumber=1)
-    {
-        if (a.size() != b.size())
-        {
-            throw invalid_argument("Vectors must be of equal size");
-        }
-        
-        vector<double> result;
-        result.reserve(a.size());
-        
-        for (size_t i = 0; i < a.size(); ++i)
-        {
-            result.push_back(pow(a[i], PowNumber) + pow(b[i], PowNumber));
-        }
-        
-        return result;
-    }
-
-    vector<double> SubtractVectors(const vector<double>& a, const vector<double>& b)
-    {
-        if (a.size() != b.size())
-        {
-            throw invalid_argument("Vectors must be of equal size");
-        }
-        
-        vector<double> result;
-        result.reserve(a.size());
-        
-        for (size_t i = 0; i < a.size(); ++i)
-        {
-            result.push_back(a[i] - b[i]);
-        }
-        
-        return result;
-    }
-
-    vector<vector<double>> SubtractVectorsVectors(const vector<vector<double>>& a, const vector<vector<double>>& b)
-    {
-        if (a.size() != b.size())
-        {
-            throw invalid_argument("Vectors must be of equal size");
-        }
-        
-        vector<vector<double>> result;
-        result.reserve(a.size());
-        
-        for (size_t i = 0; i < a.size(); ++i)
-        {
-            result.push_back(SubtractVectors(a[i], b[i]));
-        }
-        
-        return result;
-    }
-
-    double Fitness(Gene gene, const vector<vector<double>>& Cities) {
-        vector<int> path_prev = gene.path;
+        vector<int> path_prev = path;
         vector<int> path_next;
     
-        // Create shifted path (next = prev[1:] + prev[0])
         path_next.reserve(path_prev.size());
         path_next.insert(path_next.end(), path_prev.begin() + 1, path_prev.end());
         path_next.push_back(path_prev[0]);
     
         double total_distance = 0.0;
         
-        for (size_t i = 0; i < path_prev.size(); ++i) {
-            // Get coordinates for both points
+        for (size_t i = 0; i < path_prev.size(); ++i)
+        {
             const auto& city_prev = Cities[path_prev[i]];
             const auto& city_next = Cities[path_next[i]];
             
-            // Calculate squared differences
             double dx = city_prev[0] - city_next[0];
             double dy = city_prev[1] - city_next[1];
             
-            // Accumulate distance
+            total_distance += sqrt(dx*dx + dy*dy);
+        }
+        
+        return total_distance;
+    }
+
+    double Fitness(Gene gene, const vector<vector<double>>& Cities)
+    {
+        vector<int> path_prev = gene.path;
+        vector<int> path_next;
+    
+        path_next.reserve(path_prev.size());
+        path_next.insert(path_next.end(), path_prev.begin() + 1, path_prev.end());
+        path_next.push_back(path_prev[0]);
+    
+        double total_distance = 0.0;
+        
+        for (size_t i = 0; i < path_prev.size(); ++i)
+        {
+            const auto& city_prev = Cities[path_prev[i]];
+            const auto& city_next = Cities[path_next[i]];
+            
+            double dx = city_prev[0] - city_next[0];
+            double dy = city_prev[1] - city_next[1];
+            
             total_distance += sqrt(dx*dx + dy*dy);
         }
         
@@ -365,7 +243,7 @@ public:
 
     void run()
     {
-        srand(time(0)); // Seed random number generator
+        srand(time(0));
         float BestLength = numeric_limits<float>::max();
         vector<int> BestRoute;
 
@@ -376,24 +254,29 @@ public:
             Genes[GeneIndex] = gene;
         }
 
+        // for (int GeneIndex = 0; GeneIndex < PopSize; ++GeneIndex)
+        // {
+        //     json update;
+        //     update["Message"] = Genes[GeneIndex].path;
+        //     cout << update.dump() << endl;
+        //     cout.flush();
+        // }
+        
+        // random_device rd;
+        // mt19937 gen(rd());
+        // uniform_real_distribution<> dis(0.0, 1.0);
+
         for (int Iteration = 0; Iteration < Iterations; Iteration++)
         {
-            // for (int GeneIndex = 0; GeneIndex < PopSize + ChildSize; ++GeneIndex)
-            // {
-            //     json update;
-            //     update["Message"] = Genes[GeneIndex].path;
-            //     cout << update.dump() << endl;
-            //     cout.flush();
-            // }
             // break;
             for (int ChildIndex=PopSize; ChildIndex < PopSize + ChildSize; ChildIndex++)
             {
                 Gene Child(CitiesNum, true);
-                int i = rand() % CitiesNum;
-                int j = rand() % CitiesNum;
+                int i = rand() % PopSize;
+                int j = rand() % PopSize;
                 while (i == j)
                 {
-                    j = rand() % CitiesNum;
+                    j = rand() % PopSize;
                 }
                 if (i > j)
                 {
@@ -405,6 +288,10 @@ public:
                 mt19937 gen(rd());
                 uniform_real_distribution<> dis(0.0, 1.0);
 
+                // json update;
+                // update["Message"] = "Prepare for Crossover";
+                // cout << update.dump() << endl;
+                // cout.flush();
 
                 if (dis(gen) < 0.5)
                 {
@@ -414,26 +301,36 @@ public:
                 {
                     Child = Crossover(Genes[j], Genes[i]);
                 }
-
-                // json update;
-                // update["Message"] = Child.path;
+                // update["Message"] = "Ended Crossover";
                 // cout << update.dump() << endl;
                 // cout.flush();
-
+                // update["Message"] = "Prepare for Mutation";
+                // cout << update.dump() << endl;
+                // cout.flush();
                 if (dis(gen) < MutationRate)
                 {
                     Mutation(Child);
                 }
-
-                // update["Message"] = Child.path;
+                // update["Message"] = "Ended Mutation";
                 // cout << update.dump() << endl;
                 // cout.flush();
-
+                // update["Message"] = "Prepare for Writing";
+                // cout << update.dump() << endl;
+                // cout.flush();
                 Genes[ChildIndex] = Child;
-                // break;
+                // update["Message"] = Genes[ChildIndex].path;
+                // cout << update.dump() << endl;
+                // cout.flush();
             }
-            // break;
 
+            // for (int GeneIndex = 0; GeneIndex < PopSize; ++GeneIndex)
+            // {
+            //     json update;
+            //     update["Message"] = Genes[GeneIndex].path;
+            //     cout << update.dump() << endl;
+            //     cout.flush();
+            // }
+            // break;
             for (int GeneIndex = 0; GeneIndex < PopSize + ChildSize; ++GeneIndex)
             {
                 Genes[GeneIndex].length = Fitness(Genes[GeneIndex], Cities);
@@ -444,48 +341,18 @@ public:
                     BestRoute = gene.path;
                 }
             }
-            
-            // for (int GeneIndex = 0; GeneIndex < PopSize + ChildSize; ++GeneIndex)
-            // {
-            //     json update;
-            //     update["Message"] = Genes[GeneIndex].path;
-            //     cout << update.dump() << endl;
-            //     cout.flush();
-            // }
-            // break;
-
-            // for (int GeneIndex = 0; GeneIndex < PopSize + ChildSize; ++GeneIndex)
-            // {
-            //     json update;
-            //     update["Message"] = Genes[GeneIndex].path;
-            //     cout << update.dump() << endl;
-            //     cout.flush();
-            //     update["Message"] = Genes[GeneIndex].length;
-            //     cout << update.dump() << endl;
-            //     cout.flush();
-            // }
-            // json update;
-            // update["Message"] = "\n\n\n\n";
-            // cout << update.dump() << endl;
-            // cout.flush();
 
             sort(Genes.begin(), Genes.end(), [](Gene const &a, Gene const &b){return a.length < b.length;});
-            
-            // for (int GeneIndex = 0; GeneIndex < PopSize + ChildSize; ++GeneIndex)
+            // for (int GeneIndex = 0; GeneIndex < PopSize; ++GeneIndex)
             // {
             //     json update;
             //     update["Message"] = Genes[GeneIndex].path;
             //     cout << update.dump() << endl;
             //     cout.flush();
-            //     update["Message"] = Genes[GeneIndex].length;
-            //     cout << update.dump() << endl;
-            //     cout.flush();
             // }
             // break;
-
             if ((Iteration + 1) % SendEvery == 0)
             {
-                // Print after best update
                 json update;
                 update["iteration"] = Iteration;
                 update["best_distance"] = BestLength;
@@ -502,14 +369,12 @@ int main()
     string input((istreambuf_iterator<char>(cin)), {});
     json j = json::parse(input);
 
-    // Parse cities
     vector<vector<double>> cities;
     for (auto& row : j["cities"])
     {
         cities.emplace_back(row);
     }
 
-    // Solve TSP
     Genetic genes(cities, j["pop_size"], j["iterations"], j["child_size"], j["mutation_probability"], j["every"]);
     genes.run();
 

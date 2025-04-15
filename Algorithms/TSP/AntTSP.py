@@ -34,6 +34,7 @@ else:
 
 def AntTSP(cities, pop_size=10, iterations=100, alpha=0.5, beta=0.5, rho=0.5, Q=100, **kwargs):
     info = kwargs.get("info", False)
+    plot = kwargs.get("plot", True)
     if info:
         print("[AntTSP] Started...")
     request = {
@@ -98,7 +99,10 @@ def AntTSP(cities, pop_size=10, iterations=100, alpha=0.5, beta=0.5, rho=0.5, Q=
 
     if info:
         print("[AntTSP] Done!")
-    Plot().plotTSP(best_distance, best_route, cities, **kwargs)
+    if plot:
+        Plot().plotTSP(best_distance, best_route, cities, **kwargs)
+    print("[AntTSP] Distance:", best_distance[-1])
+    return best_distance, best_route
 
 
 if __name__ == "__main__":
