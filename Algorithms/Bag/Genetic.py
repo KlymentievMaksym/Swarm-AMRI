@@ -4,8 +4,9 @@ from tqdm import tqdm
 
 if __name__ == "__main__":
     from Generator import Generator
-# else:
-#     from .Generator import Generator
+    from Plot import Plot
+else:
+    from .Plot import Plot
 
 
 def fitness(population, weight, values, max_capacity):
@@ -41,7 +42,6 @@ def mutation(child):
 def Genetic(iterations: int, pop_size: int, child_size: int, mutation_probability: float, max_capacity: float, weight_price: list[list[float, float]], **kwargs):
     fitnes = np.zeros(pop_size + child_size)
     best_f = 0
-    # best_f = float('inf')
     best_items_choose = np.zeros((weight_price.shape[0]))
 
     if isinstance(weight_price, list):
@@ -50,7 +50,9 @@ def Genetic(iterations: int, pop_size: int, child_size: int, mutation_probabilit
         raise Exception("weight_price must be a list or numpy array")
     population = np.zeros((pop_size + child_size, weight_price.shape[0]))
     population[:pop_size] = np.random.randint(0, 2, size=(pop_size, weight_price.shape[0]))
-    # print(population)
+
+    history_pop = np.zeros((iterations, pop_size + child_size, weight_price.shape[0]))
+    history_fitness = np.zeros((iterations, pop_size + child_size))
 
     for iteration in tqdm(
         range(iterations),
@@ -70,31 +72,21 @@ def Genetic(iterations: int, pop_size: int, child_size: int, mutation_probabilit
             if np.random.rand() < mutation_probability:
                 population[child_index] = mutation(population[child_index])
 
-        # print(max_capacity)
-
         for pupil in range(pop_size + child_size):
             fitnes[pupil] = fitness(population[pupil], weight_price[:, 0], weight_price[:, 1], max_capacity)
-            # print(population[pupil])
-            # print(fitnes[pupil])
-            # if best_f < abs(fitnes[pupil]):
-            #     print(fitnes[pupil])
-            #     best_f = abs(fitnes[pupil])
-            #     best_items_choose = population[pupil]
 
         ind = np.argsort(fitnes)
         fitnes = fitnes[ind]
-        # print(population)
-        # print(fitnes)
-        # print(population[0])
-        population = population[ind]  #[::-1]
-        # print(population[0])
+        population = population[ind]
 
         if best_f < abs(fitnes[0]):
-            # print(fitnes[0])
             best_f = abs(fitnes[0])
             best_items_choose = population[0]
-        # print()
-        # break
+
+        history_pop[iteration] = population.copy()
+        history_fitness[iteration] = -fitnes.copy()
+
+    Plot(history_pop, history_fitness)
     return best_f, best_items_choose
 
 
