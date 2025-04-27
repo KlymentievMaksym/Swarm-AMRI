@@ -1,5 +1,6 @@
 import numpy as np
 from os import listdir
+from time import time
 
 from Algorithms.Bag.Anneal import Anneal
 from Algorithms.Bag.Genetic import Genetic
@@ -26,8 +27,8 @@ for data_path in datas_path:
         data[i] = list(map(int, data[i]))
     data = np.array(data)
     iterations = 100
-    ann = Anneal(iterations, 1e-3, 100, 0.99, max_weight, data, plot_convergence=True, plot_bar=True)
-    gen = Genetic(iterations, 20, 100, 0.9, max_weight, data, plot_convergence=True, plot_bar=True)
+    ann = Anneal(iterations, 1e-3, 100, 0.99, max_weight, data, plot_convergence=True, plot_bar=True, show_bar_animation=False, show_convergence_animation=False, save_convergence=f"./Lab5/Images/{time()}.png")
+    gen = Genetic(iterations, 20, 100, 0.9, max_weight, data, plot_convergence=True, plot_bar=True, show_bar_animation=False, show_convergence_animation=False, save_convergence=f"./Lab5/Images/{time()}.png")
     print(f"[Path] {data_path}")
     print(f"[Weight] Max weight: {max_weight}")
     print(f"[Ann] Best value: {ann[0]}, used weight: {np.sum(ann[1] * data[:, 0])}\n[Gen] Best value: {gen[0]}, used weight: {np.sum(gen[1] * data[:, 0])}\n")

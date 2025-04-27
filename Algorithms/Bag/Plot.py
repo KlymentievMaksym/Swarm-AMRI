@@ -72,7 +72,7 @@ class Plot:
                 ax2.set_ylabel("Value")
                 # padding = 5
                 ax2.set_xlim(0 - padding, len(history_pop[frame]) + padding)
-                ax2.set_ylim(0 - padding, history_fitness[-1][0] + padding)
+                ax2.set_ylim(0 - padding, max(history_fitness[-1]) + padding)
         elif self.show_convergence_animation:
             def update(frame):
                 ax1.cla()
@@ -93,7 +93,7 @@ class Plot:
                 ax2.set_ylabel("Value")
                 # padding = 5
                 ax2.set_xlim(0 - padding, len(history_pop[frame]) + padding)
-                ax2.set_ylim(0 - padding, history_fitness[-1][0] + padding)
+                ax2.set_ylim(0 - padding, max(history_fitness[-1]) + padding)
         if self.show_convergence_animation or self.show_bar_animation:
             ani = animation.FuncAnimation(fig, update, frames=len(history_pop), interval=self.interval)
             try:
@@ -160,7 +160,7 @@ class Plot:
                 plt.ylabel("Value")
                 padding = 5
                 plt.xlim(0 - padding, len(history_pop[frame]) + padding)
-                plt.ylim(0 - padding, history_fitness[-1][0] + padding)
+                plt.ylim(0 - padding, max(history_fitness[-1]) + padding)
             ani = animation.FuncAnimation(plt.gcf(), update, frames=len(history_pop), interval=self.interval)
             if self.save_bar:
                 try:
