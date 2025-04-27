@@ -40,6 +40,8 @@ def mutation(child):
 
 
 def Genetic(iterations: int, pop_size: int, child_size: int, mutation_probability: float, max_capacity: float, weight_price: list[list[float, float]], **kwargs):
+    every = kwargs.get("every", 1)
+
     fitnes = np.zeros(pop_size + child_size)
     best_f = 0
     best_items_choose = np.zeros((weight_price.shape[0]))
@@ -51,8 +53,8 @@ def Genetic(iterations: int, pop_size: int, child_size: int, mutation_probabilit
     population = np.zeros((pop_size + child_size, weight_price.shape[0]))
     population[:pop_size] = np.random.randint(0, 2, size=(pop_size, weight_price.shape[0]))
 
-    history_pop = np.zeros((iterations, pop_size + child_size, weight_price.shape[0]))
-    history_fitness = np.zeros((iterations, pop_size + child_size))
+    history_pop = np.zeros((iterations//every + 1, pop_size + child_size, weight_price.shape[0]))
+    history_fitness = np.zeros((iterations//every + 1, pop_size + child_size))
 
     for iteration in tqdm(
         range(iterations),
@@ -77,22 +79,27 @@ def Genetic(iterations: int, pop_size: int, child_size: int, mutation_probabilit
 
         ind = np.argsort(fitnes)
         fitnes = fitnes[ind]
-        population = population[ind]
+        if fitnes[0] == 0 and fitnes[-1] == 0:
+            print("Same fitnes. Restarting population")
+            population[:pop_size] = np.random.randint(0, 2, size=(pop_size, weight_price.shape[0]))
+        else:
+            population = population[ind]
 
         if best_f < abs(fitnes[0]):
             best_f = abs(fitnes[0])
             best_items_choose = population[0]
-
-        history_pop[iteration] = population.copy()
-        history_fitness[iteration] = -fitnes.copy()
-
-    Plot(history_pop, history_fitness)
+        if (iteration + 1) % every == 0:
+            history_pop[iteration//every] = population.copy()
+            history_fitness[iteration//every] = -fitnes.copy()
+    history_pop[-1] = population.copy()
+    history_fitness[-1] = -fitnes.copy()
+    Plot().Plot(history_pop, history_fitness, **kwargs)
     return best_f, best_items_choose
 
 
 if __name__ == "__main__":
-    weigth_max, data = Generator(10, min_amount=1, max_price=10, max_weight=10).generate()
-    best_f, best_items_choose = Genetic(10, 10, 100, 0.5, weigth_max, data)
+    weigth_max, data = Generator(100, min_amount=20, max_price=10, max_weight=10).generate()
+    best_f, best_items_choose = Genetic(100, 20, 40, 0.5, weigth_max, data, show_convergence_animation=True, show_bar_animation=True, every=1, interval=30)  # , save_convergence="convergence.gif"
     print(best_f, best_items_choose)
     print(f"Max capacity: {weigth_max}, Weight used: {np.sum(data[:, 0] * best_items_choose)}, Best value: {best_f}\nBest items choose: \n{best_items_choose}")
     # print(f"Max theoretical capacity: {np.sum(data[:, 0])}, Max theoretical value: {np.sum(data[:, 1])}")
