@@ -1,10 +1,12 @@
 import numpy as np
+from tqdm import tqdm
 
 
 if __name__ == "__main__":
     from Generator import Generator
-# else:
-#     from .Generator import Generator
+    from Plot import Plot
+else:
+    from .Plot import Plot
 
 
 def fitness(population, weight, values, max_capacity):
@@ -42,9 +44,15 @@ def Anneal(
     T_min: float,
     T_max: float,
     cooling: float,
-    weight_price: np.ndarray,
     max_capacity: float,
+    weight_price: np.ndarray,
+    **kwargs
 ):
+    every = kwargs.get("every", 1)
+
+    history_pop = np.zeros((iterations//every + 1, weight_price.shape[0]))
+    history_fitness = np.zeros((iterations//every + 1))
+
     T = T_max
     weight = weight_price[:, 0]
     price = weight_price[:, 1]
@@ -52,7 +60,13 @@ def Anneal(
     solution_route = np.random.randint(0, 2, size=(weight_price.shape[0]))
     solution = fitness(solution_route, weight, price, max_capacity)
 
-    for iteration in range(iterations):
+    for iteration in tqdm(
+        range(iterations),
+        desc="Processing",
+        unit="step",
+        bar_format="{l_bar}{bar:40}{r_bar}",
+        colour='cyan'
+    ):
         solution_main = fitness(solution_route, weight, price, max_capacity)
         neighbor_route = mutate(solution_route)
         solution_neighbor = fitness(neighbor_route, weight, price, max_capacity)
@@ -71,15 +85,24 @@ def Anneal(
                 solution_route = neighbor_route
                 solution = solution_neighbor
         T *= cooling
+        if (iteration + 1) % every == 0:
+            history_pop[iteration//every] = solution_route.copy()
+            history_fitness[iteration//every] = solution
         if T < T_min:
             break
-    # return best_solution, best_items
+
+    history_pop[-1] = solution_route.copy()
+    history_fitness[-1] = solution
+    history_fitness = np.array([history_fitness]).T
+    # print(history_fitness)
+    Plot().Plot(history_pop, history_fitness, **kwargs)
+    
     return solution, solution_route
 
 
 if __name__ == "__main__":
     capacity, data = Generator(10, min_amount=10, max_price=10, max_weight=10).generate()
-    solution, solution_items = Anneal(1000, 1e-7, 100, 0.99, data, capacity)
+    solution, solution_items = Anneal(1000, 1e-7, 100, 0.99, capacity, data, show_convergence_animation=True, show_bar_animation=True, every=20, interval=200)
     print("Best solution:", solution)
     print("Items:", solution_items)
     print("Weigh:", data[:, 0].astype(int))

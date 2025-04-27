@@ -99,7 +99,7 @@ def Genetic(iterations: int, pop_size: int, child_size: int, mutation_probabilit
 
 if __name__ == "__main__":
     weigth_max, data = Generator(100, min_amount=20, max_price=10, max_weight=10).generate()
-    best_f, best_items_choose = Genetic(100, 20, 40, 0.5, weigth_max, data, show_convergence_animation=True, show_bar_animation=True, every=1, interval=30)  # , save_convergence="convergence.gif"
+    best_f, best_items_choose = Genetic(100, 20, 40, 0.5, weigth_max, data, show_convergence_animation=True, show_bar_animation=True, every=10, interval=3000)  # , save_convergence="convergence.gif"
     print(best_f, best_items_choose)
     print(f"Max capacity: {weigth_max}, Weight used: {np.sum(data[:, 0] * best_items_choose)}, Best value: {best_f}\nBest items choose: \n{best_items_choose}")
     # print(f"Max theoretical capacity: {np.sum(data[:, 0])}, Max theoretical value: {np.sum(data[:, 1])}")

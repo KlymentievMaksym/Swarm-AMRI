@@ -48,7 +48,7 @@ class Plot:
             ax1.set_ylabel("Fitness")
         if not self.show_bar_animation:
             ax2.set_title(f"best fit {history_fitness[-1][0]:.4f}")
-            ax2.bar(range(len(history_pop[-1])), history_fitness[-1])
+            ax2.bar(range(len(history_pop[-1])) if len(history_pop[-1].shape) > 1 else 0, history_fitness[-1])
             ax2.set_xlabel("Part index")
             ax2.set_ylabel("Value")
 
@@ -57,6 +57,7 @@ class Plot:
             def update(frame):
                 ax1.cla()
                 ax1.set_title(f"iteration {frame * self.show_every}, best fit {history_fitness[frame][0]:.4f}")
+                # print(np.arange(len(history_fitnes[:frame+1]), step=1) * self.show_every, history_fitnes[:frame+1])
                 ax1.plot(np.arange(len(history_fitnes[:frame+1]), step=1) * self.show_every, history_fitnes[:frame+1])
                 ax1.grid()
                 ax1.set_xlabel("Iterations")
@@ -66,7 +67,7 @@ class Plot:
                 ax1.set_ylim(min(history_fitnes) - padding, max(history_fitnes) + padding)
                 ax2.cla()
                 ax2.set_title(f"iteration {frame * self.show_every}, best fit {history_fitness[frame][0]:.4f}")
-                ax2.bar(range(len(history_pop[frame])), history_fitness[frame])
+                ax2.bar(range(len(history_pop[frame])) if len(history_pop[frame].shape) > 1 else 0, history_fitness[frame])
                 ax2.set_xlabel("Part index")
                 ax2.set_ylabel("Value")
                 # padding = 5
@@ -87,7 +88,7 @@ class Plot:
             def update(frame):
                 ax2.cla()
                 ax2.set_title(f"iteration {frame * self.show_every}, best fit {history_fitness[frame][0]:.4f}")
-                ax2.bar(range(len(history_pop[frame])), history_fitness[frame])
+                ax2.bar(range(len(history_pop[frame])) if len(history_pop[frame].shape) > 1 else 0, history_fitness[frame])
                 ax2.set_xlabel("Part index")
                 ax2.set_ylabel("Value")
                 # padding = 5
@@ -141,7 +142,7 @@ class Plot:
     def PlotBar(self, history_pop, history_fitness):
         if not self.show_bar_animation:
             plt.title(f"best fit {history_fitness[-1][0]:.4f}")
-            plt.bar(range(len(history_pop[-1])), history_fitness[-1])
+            plt.bar(range(len(history_pop[-1])) if len(history_pop[-1].shape) > 1 else 0, history_fitness[-1])
             plt.xlabel("Part index")
             plt.ylabel("Value")
 
@@ -154,7 +155,7 @@ class Plot:
             def update(frame):
                 plt.cla()
                 plt.title(f"iteration {frame * self.show_every}, best fit {history_fitness[frame][0]:.4f}")
-                plt.bar(range(len(history_pop[frame])), history_fitness[frame])
+                plt.bar(range(len(history_pop[frame])) if len(history_pop[frame].shape) > 1 else 0, history_fitness[frame])
                 plt.xlabel("Part index")
                 plt.ylabel("Value")
                 padding = 5
