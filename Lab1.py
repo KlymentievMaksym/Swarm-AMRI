@@ -1,5 +1,5 @@
-from Algorithms.Genetic import Genetic
-from Algorithms.GrayWolf import GrayWolf
+from Algorithms.Functions.Genetic import Genetic
+from Algorithms.Functions.GrayWolf import GrayWolf
 
 import numpy as np
 

@@ -8,6 +8,7 @@ from typing import Callable
 
 from time import time
 
+
 class Algorithm:
     def __init__(self, pop_size: int, iterations: int, random_limits: list[list[float, float]], function: Callable, limits: list[list[float, float]], **kwargs):
         self.iterations = iterations

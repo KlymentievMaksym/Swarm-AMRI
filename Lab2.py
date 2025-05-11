@@ -1,6 +1,6 @@
-from Algorithms.Bee import BEE
-from Algorithms.Firefly import FF
-from Algorithms.PSO import PSO
+from Algorithms.Functions.Bee import BEE
+from Algorithms.Functions.Firefly import FF
+from Algorithms.Functions.PSOc import PSO
 
 import numpy as np
 import numba as nb

@@ -107,6 +107,6 @@ class Generator:
 
 if __name__ == "__main__":
     # for i in range(100):
-    gen = Generator(10, [0, 0], strength=1, speed=1, max_weight=10, max_price=10, items_per_square=10, min_amount=5)
+    gen = Generator(100000, [0, 0], strength=1, speed=1, max_weight=10, max_price=10, items_per_square=10, min_amount=5)
     gen.generate(info=True)
     # gen.plot()

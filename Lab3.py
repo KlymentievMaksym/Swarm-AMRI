@@ -1,5 +1,5 @@
 from Algorithms.Functions.Bat import Bat
-from Algorithms.Cuckoo import Cuckoo
+from Algorithms.Functions.Cuckoo import Cuckoo
 
 import numpy as np
 import numba as nb
