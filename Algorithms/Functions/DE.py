@@ -23,7 +23,7 @@ def DE(pop_size, iterations, function, limits, **kwargs):
     best_f = float('inf')
     best_pop = np.zeros(dim)
 
-    if plot_do:
+    if plot_do or return_more:
         history_f = np.zeros((iterations, pop_size))
         history_pops = np.zeros((iterations, pop_size, dim))
 
@@ -71,7 +71,7 @@ def DE(pop_size, iterations, function, limits, **kwargs):
         if max_f < el_max:
             max_f = el_max
 
-        if plot_do:
+        if plot_do or return_more:
             history_best_f[iteration] = best_f
             history_best_pop[iteration] = best_pop.copy()
             history_f[iteration] = fitness.copy()

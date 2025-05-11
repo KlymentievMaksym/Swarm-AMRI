@@ -35,7 +35,7 @@ def PSO(pop_size, iterations, random_limits, limits_speed, function, limits, **k
     best = fitness_func[index]
     best_dep_val = parts[index]
 
-    if plot_do:
+    if plot_do or return_more:
         history_parts = np.zeros((iterations, pop_size, dim))
         history_fitness_func = np.zeros((iterations, pop_size))
 
@@ -95,7 +95,7 @@ def PSO(pop_size, iterations, random_limits, limits_speed, function, limits, **k
         if max_f < el_max:
             max_f = el_max
 
-        if plot_do:
+        if plot_do or return_more:
             history_fitness_func[iteration] = fitness_func.copy()
             history_parts[iteration] = parts.copy()
 
