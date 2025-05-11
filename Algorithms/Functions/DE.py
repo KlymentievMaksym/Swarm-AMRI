@@ -30,7 +30,7 @@ def DE(pop_size, iterations, function, limits, **kwargs):
         history_best_f = np.zeros(iterations)
         history_best_pop = np.zeros((iterations, dim))
 
-    fitness = np.array([function(X) for X in population])
+    fitness = np.apply_along_axis(function, 1, population)
     for iteration in tqdm(
         range(iterations),
         desc="Processing",
