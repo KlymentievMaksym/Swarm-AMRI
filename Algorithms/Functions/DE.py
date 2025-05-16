@@ -8,9 +8,13 @@ else:
     from .PlotSolo import Plot
 
 
-def DE(pop_size, iterations, function, limits, **kwargs):
+def DE(pop_size, iterations, function, limits, F: float = None, P: float = None, **kwargs):
     plot_do = kwargs.get("plot", False)
     return_more = kwargs.get("more", False)
+
+    do_random_F = False if F else True
+    do_random_P = False if P else True
+
     dim = len(limits)
     limits = np.array(limits)
     # print(limits)
@@ -40,21 +44,22 @@ def DE(pop_size, iterations, function, limits, **kwargs):
         total=iterations
     ):
         for i in range(pop_size):
-            F = np.random.uniform(1e-6, 2)
-            P = np.random.uniform(1e-6, 1)
+            if do_random_F:
+                F = np.random.uniform(1e-6, 2)
+            if do_random_P:
+                P = np.random.uniform(1e-6, 1)
             r = np.random.uniform(1e-6, 1, dim)
 
+            count = 0
             x1, x2, x3 = np.random.choice(population.shape[0], size=3, replace=False)
             while np.all(population[x1] == population[i]) or np.all(population[x2] == population[i]) or np.all(population[x3] == population[i]):
                 x1, x2, x3 = np.random.choice(population.shape[0], size=3, replace=False)
+                count += 1
+                if count > 10:
+                    break
 
-            if np.random.rand() < 0.5:
-                mutant_vect = population[x1] + F * (population[x2] - population[x3])
-                mutant_vector = population[i].copy()
-                mutant_vector[r < P] = mutant_vect[r < P]
-            else:
-                mutant_vector = population[x1] + F * (population[x2] - population[x3])
-                mutant_vector[r < P] = population[i][r < P]
+            mutant_vector = population[x1] + F * (population[x2] - population[x3])
+            mutant_vector[r < P] = population[i][r < P]
 
             mutant_vector = np.clip(mutant_vector, x_low, x_high)
             mutant_fitness = function(mutant_vector)
