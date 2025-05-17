@@ -46,19 +46,19 @@ for i in lts:
             train, test = train_test_split(dat, test_size=0.25)
 
             def funct9_tt(X):
-                return np.sum((test[:, 0] - var9(X, test[:, 1]))**2)
+                return np.mean((test[:, 0] - var9(X, test[:, 1]))**2)
             def funct9_tn(X):
-                return np.sum((train[:, 0] - var9(X, train[:, 1]))**2)
+                return np.mean((train[:, 0] - var9(X, train[:, 1]))**2)
 
             def funct10_tt(X):
-                return np.sum((test[:, 0] - var10(X, test[:, 1]))**2)
+                return np.mean((test[:, 0] - var10(X, test[:, 1]))**2)
             def funct10_tn(X):
-                return np.sum((train[:, 0] - var10(X, train[:, 1]))**2)
+                return np.mean((train[:, 0] - var10(X, train[:, 1]))**2)
 
             def funct11_tt(X):
-                return np.sum((test[:, 0] - var11(X, test[:, 1]))**2)
+                return np.mean((test[:, 0] - var11(X, test[:, 1]))**2)
             def funct11_tn(X):
-                return np.sum((train[:, 0] - var11(X, train[:, 1]))**2)
+                return np.mean((train[:, 0] - var11(X, train[:, 1]))**2)
 
             funct9_limits = [[0, 10], [0, 5], *[[-2, 2] for _ in range(3)]]
             funct10_limits = [[100, 1000], [0, 1]]

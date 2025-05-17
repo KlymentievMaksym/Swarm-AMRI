@@ -1,19 +1,19 @@
 import numpy as np
 from tqdm import tqdm
 
-
 if __name__ == "__main__":
     from PlotSolo import Plot
 else:
     from .PlotSolo import Plot
 
 
-def DE(pop_size, iterations, function, limits, F: float = None, P: float = None, **kwargs):
+def DE(pop_size, iterations, function, limits, F: float = None, P: float = None, parameters_to_pass=None, **kwargs):
     plot_do = kwargs.get("plot", False)
     return_more = kwargs.get("more", False)
+    every = kwargs.get("every", 1)
 
-    do_random_F = False if F else True
-    do_random_P = False if P else True
+    do_random_F = F is None
+    do_random_P = P is None
 
     dim = len(limits)
     limits = np.array(limits)
@@ -23,18 +23,23 @@ def DE(pop_size, iterations, function, limits, F: float = None, P: float = None,
 
     population = np.random.uniform(x_low, x_high, (pop_size, dim))
 
-    max_f = 0
-    best_f = float('inf')
-    best_pop = np.zeros(dim)
-
     if plot_do or return_more:
-        history_f = np.zeros((iterations, pop_size))
-        history_pops = np.zeros((iterations, pop_size, dim))
+        history_f = np.zeros((iterations//every, pop_size))
+        history_pops = np.zeros((iterations//every, pop_size, dim))
 
-        history_best_f = np.zeros(iterations)
-        history_best_pop = np.zeros((iterations, dim))
+        history_best_f = np.zeros(iterations//every)
+        history_best_pop = np.zeros((iterations//every, dim))
 
-    fitness = np.apply_along_axis(function, 1, population)
+    if parameters_to_pass is None:
+        fitness = np.apply_along_axis(function, 1, population)
+    else:
+        fitness = np.apply_along_axis(function, 1, population, *parameters_to_pass)
+
+    best_idx = np.argmin(fitness)
+    best_f = fitness[best_idx]
+    best_pop = population[best_idx].copy()
+    max_f = np.max(fitness)
+
     for iteration in tqdm(
         range(iterations),
         desc="Processing",
@@ -50,40 +55,39 @@ def DE(pop_size, iterations, function, limits, F: float = None, P: float = None,
                 P = np.random.uniform(1e-6, 1)
             r = np.random.uniform(1e-6, 1, dim)
 
-            count = 0
-            x1, x2, x3 = np.random.choice(population.shape[0], size=3, replace=False)
-            while np.all(population[x1] == population[i]) or np.all(population[x2] == population[i]) or np.all(population[x3] == population[i]):
-                x1, x2, x3 = np.random.choice(population.shape[0], size=3, replace=False)
-                count += 1
-                if count > 10:
-                    break
+            idxs = np.delete(np.arange(pop_size), i)
+            x1, x2, x3 = population[np.random.choice(idxs, 3, replace=False)]
 
-            mutant_vector = population[x1] + F * (population[x2] - population[x3])
-            mutant_vector[r < P] = population[i][r < P]
-
+            mutant_vector = x1 + F * (x2 - x3)
+            mutant_vector = np.where(r < P, population[i], mutant_vector)
             mutant_vector = np.clip(mutant_vector, x_low, x_high)
-            mutant_fitness = function(mutant_vector)
+
+            if parameters_to_pass is None:
+                mutant_fitness = function(mutant_vector)
+            else:
+                mutant_fitness = function(mutant_vector, *parameters_to_pass)
+
             if fitness[i] > mutant_fitness:
                 fitness[i] = mutant_fitness
                 population[i] = mutant_vector.copy()
 
         el_min = np.argmin(fitness)
-        if best_f > fitness[el_min]:
-            best_f = fitness[el_min]
+        current_best_f = fitness[el_min]
+        if best_f > current_best_f:
+            best_f = current_best_f
             best_pop = population[el_min].copy()
 
-        el_max = np.max(fitness)
-        if max_f < el_max:
-            max_f = el_max
+        max_f = max(max_f, np.max(fitness))
 
         if plot_do or return_more:
-            history_best_f[iteration] = best_f
-            history_best_pop[iteration] = best_pop.copy()
-            history_f[iteration] = fitness.copy()
-            history_pops[iteration] = population.copy()
+            if iteration % every == 0:
+                history_best_f[iteration//every] = best_f
+                history_best_pop[iteration//every] = best_pop.copy()
+                history_f[iteration//every] = fitness.copy()
+                history_pops[iteration//every] = population.copy()
 
     if plot_do:
-        Plot(history_f, history_pops, history_best_f, history_best_pop, max_f, best_f, function, limits, **kwargs)
+        Plot(history_f, history_pops, history_best_f, history_best_pop, max_f, best_f, function, limits, parameters_to_pass, **kwargs)
 
     if return_more:
         return best_f, best_pop, history_f, history_pops, history_best_f, history_best_pop
@@ -122,5 +126,5 @@ if __name__ == "__main__":
     #     return float('inf')
     # func_limit = [[2.6, 3.6], [0.7, 0.8], [17, 28], [7.3, 8.3], [7.8, 8.3], [2.9, 3.9], [5.0, 5.5]]
 
-    de = DE(100, 100, func, func_limit, plot=True, d3=True, d2=True, static=True)
+    de = DE(100, 100, func, func_limit, plot=True, d3=True, d2=True, static=False, every=5)
     print(de)

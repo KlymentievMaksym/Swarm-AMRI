@@ -8,11 +8,15 @@ else:
     from .PlotSolo import Plot
 
 
-def PSO(pop_size, iterations, random_limits, limits_speed, function, limits, **kwargs):
+def PSO(pop_size, iterations, random_limits, limits_speed, function, limits, a1: float = None, a2: float = None, parameters_to_pass=None, **kwargs):
     plot_do = kwargs.get("plot", False)
     return_more = kwargs.get("more", False)
+    every = kwargs.get("every", 1)
+
     limits = np.array(limits)
 
+    do_random_a1 = a1 is None
+    do_random_a2 = a2 is None
     [low, high] = random_limits
 
     dim = len(limits)
@@ -27,7 +31,11 @@ def PSO(pop_size, iterations, random_limits, limits_speed, function, limits, **k
     parts = np.random.uniform(x_low, x_high, (pop_size, dim))
     for i in ints:
         parts[:, i] = np.round(parts[:, i])
-    fitness_func = np.apply_along_axis(function, 1, parts)
+
+    if parameters_to_pass is None:
+        fitness_func = np.apply_along_axis(function, 1, parts)
+    else:
+        fitness_func = np.apply_along_axis(function, 1, parts, *parameters_to_pass)
 
     max_f = 0
 
@@ -36,17 +44,18 @@ def PSO(pop_size, iterations, random_limits, limits_speed, function, limits, **k
     best_dep_val = parts[index]
 
     if plot_do or return_more:
-        history_parts = np.zeros((iterations, pop_size, dim))
-        history_fitness_func = np.zeros((iterations, pop_size))
+        history_parts = np.zeros((iterations//every, pop_size, dim))
+        history_fitness_func = np.zeros((iterations//every, pop_size))
 
-        history_best_dep_val = np.zeros((iterations, dim))
-        history_best = np.zeros(iterations)
+        history_best_dep_val = np.zeros((iterations//every, dim))
+        history_best = np.zeros(iterations//every)
 
     speed = np.random.uniform(limits_speed[0], limits_speed[1], (pop_size, dim))
 
     best_personal = [float("inf") for part in range(pop_size)]
     best_personal_dep_val = [[0 for i in range(dim)] for j in range(pop_size)]
 
+    first_time = True
     # run_before(**kwargs)
     for iteration in tqdm(
         range(iterations),
@@ -57,16 +66,20 @@ def PSO(pop_size, iterations, random_limits, limits_speed, function, limits, **k
         total=iterations
     ):
         for i in range(pop_size):
-            a1 = np.random.uniform(low, high)
-            a2 = np.random.uniform(low, high)
+            if do_random_a1:
+                a1 = np.random.uniform(low, high)
+            if do_random_a2:
+                a2 = np.random.uniform(low, high)
             r1 = np.random.rand(dim)
             r2 = np.random.rand(dim)
+            if not first_time:
+                if parameters_to_pass is None:
+                    fitness_func[i] = function(parts[i])
+                else:
+                    fitness_func[i] = function(parts[i], *parameters_to_pass)
 
-            fitness_func[i] = function(parts[i])
-
-            prev_best_personal = best_personal[i]
-            best_personal[i] = min(best_personal[i], fitness_func[i])
-            if prev_best_personal != best_personal[i]:
+            if best_personal[i] > fitness_func[i]:
+                best_personal[i] = fitness_func[i]
                 best_personal_dep_val[i] = parts[i].copy()
 
             if best > fitness_func[i]:
@@ -96,13 +109,23 @@ def PSO(pop_size, iterations, random_limits, limits_speed, function, limits, **k
             max_f = el_max
 
         if plot_do or return_more:
-            history_fitness_func[iteration] = fitness_func.copy()
-            history_parts[iteration] = parts.copy()
+            if iteration % every == 0:
+                history_fitness_func[iteration//every] = fitness_func.copy()
+                history_parts[iteration//every] = parts.copy()
 
-            history_best[iteration] = best
-            history_best_dep_val[iteration] = best_dep_val.copy()
+                history_best[iteration//every] = best
+                history_best_dep_val[iteration//every] = best_dep_val.copy()
+        first_time = False
+
+    if plot_do or return_more:
+        history_fitness_func[-1] = fitness_func.copy()
+        history_parts[-1] = parts.copy()
+
+        history_best[-1] = best
+        history_best_dep_val[-1] = best_dep_val.copy()
+
     if plot_do:
-        Plot(history_fitness_func, history_parts, history_best, history_best_dep_val, max_f, best, function, limits, **kwargs)
+        Plot(history_fitness_func, history_parts, history_best, history_best_dep_val, max_f, best, function, limits, parameters_to_pass, **kwargs)
 
     if return_more:
         return best, best_dep_val, history_fitness_func, history_parts, history_best, history_best_dep_val
@@ -119,4 +142,4 @@ if __name__ == "__main__":
             result += x**2-A*np.cos(2*np.pi*x)
         return result
     F_limits = [[-5.12, 5.12], [-5.12, 5.12]]
-    pso = PSO(40, 70, [0, 4], [-.15, .15], F, F_limits, plot=True, d2=False, d3=True)
+    pso = PSO(40, 700, [0, 4], [-.15, .15], F, F_limits, plot=True, d2=True, d3=False, static=False, every=5)

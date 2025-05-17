@@ -35,8 +35,8 @@ def _set_limits(ax1, ax2, min_f, max_f, history_f):
     return ax1, ax2
 
 
-def _update(frame, pop_fitness, best_fitness, history_best_f, history_f):
-    plt.suptitle(f"Best solution: {history_best_f[frame]:.5f} | Iter {frame}")
+def _update(frame, pop_fitness, best_fitness, history_best_f, history_f, every):
+    plt.suptitle(f"Best solution: {history_best_f[frame]:.5f} | Iter {frame * every}")
     pop_fitness.set_xdata(list(range(len(history_f[frame]))))
     pop_fitness.set_ydata(history_f[frame])
 
@@ -48,7 +48,10 @@ def _update(frame, pop_fitness, best_fitness, history_best_f, history_f):
 
 def _create_axes(frame, ax1, ax2, history_f, history_best_f, min_f, max_f, inf, static):
     pop_fitness = ax1.plot(history_f[frame], label="Fitness")[0]
-    best_fitness = ax2.plot(history_best_f[:frame], label="Best")[0]
+    if frame == -1:
+        best_fitness = ax2.plot(history_best_f, label="Best")[0]
+    else:
+        best_fitness = ax2.plot(history_best_f[:frame], label="Best")[0]
 
     if static:
         plt.suptitle(f"Best solution: {history_best_f[frame]:.5f}")
@@ -91,12 +94,13 @@ def _create_axes_d3(frame, ax3, space, projection, history_f, history_pops, hist
     return pop_scatter_3d, best_scatter_3d
 
 
-def Plot(history_f, history_pops, history_best_f, history_best_pop, max_f, min_f, function, limits, **kwargs):
+def Plot(history_f, history_pops, history_best_f, history_best_pop, max_f, min_f, function, limits, parameters_to_pass=None, **kwargs):
     d2 = kwargs.get("d2", True)
     d3 = kwargs.get("d3", False)
     save = kwargs.get("save", False)
     static = kwargs.get("static", False)
     inf = kwargs.get("inf", False)
+    every = kwargs.get("every", 1)
 
     pop = "LightBlue"
     best = "Red"
@@ -116,7 +120,7 @@ def Plot(history_f, history_pops, history_best_f, history_best_pop, max_f, min_f
                 _set_limits(ax1, ax2, min_f, max_f, history_f)
 
             def update(frame):
-                _update(frame, pop_fitness, best_fitness, history_best_f, history_f)
+                _update(frame, pop_fitness, best_fitness, history_best_f, history_f, every)
                 return (pop_fitness, best_fitness)
     else:
         fig = plt.figure(figsize=(8, 6))
@@ -140,7 +144,10 @@ def Plot(history_f, history_pops, history_best_f, history_best_pop, max_f, min_f
         projection_dep_val = np.linspace(x_low, x_high, dots)
         space = np.array([projection_dep_val[:, i] for i in range(dim)])
         space = np.meshgrid(*space)
-        projection = np.array([[function(np.array([space[i][j, k] for i in range(dim)])) for k in range(dots)] for j in range(dots)])
+        if parameters_to_pass is None:
+            projection = np.array([[function(np.array([space[i][j, k] for i in range(dim)])) for k in range(dots)] for j in range(dots)])
+        else:
+            projection = np.array([[function(np.array([space[i][j, k] for i in range(dim)]), *parameters_to_pass) for k in range(dots)] for j in range(dots)])
 
         if static:
             frame = -1
@@ -179,7 +186,7 @@ def Plot(history_f, history_pops, history_best_f, history_best_pop, max_f, min_f
                     ax3.view_init(elev=45, azim=35)
 
             def update(frame):
-                _update(frame, pop_fitness, best_fitness, history_best_f, history_f)
+                _update(frame, pop_fitness, best_fitness, history_best_f, history_f, every)
 
                 if d2:
                     pop_scatter.set_offsets(history_pops[frame, :])
